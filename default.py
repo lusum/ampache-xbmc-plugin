@@ -31,27 +31,6 @@ except ImportError:
 ampache = xbmcaddon.Addon("plugin.audio.ampache")
 imagepath = os.path.join(os.getcwd().replace(';', ''),'resources','images')
 
-def enableAlarm():
-    alarm_hour = int(ampache.getSetting('alarm_hour'))
-    alarm_minute = int(ampache.getSetting('alarm_minute'))
-    current_hour = time.localtime().tm_hour
-    current_minute = time.localtime().tm_min
-    if (current_hour < alarm_hour) or ((current_hour == alarm_hour) and (current_minute < alarm_minute)):
-        wait_mins = ((alarm_hour - current_hour) * 60) - current_minute + alarm_minute
-    elif (current_hour > alarm_hour) or ((current_hour == alarm_hour) and (current_minute > alarm_minute)):
-        wait_mins = ((23 - current_hour) * 60) + (60 - current_minute) + (alarm_hour * 60) + alarm_minute
-    execCMD = 'PlayMedia(plugin://plugin.audio.ampache/?mode=9)'
-    builtinCMD = 'XBMC.AlarmClock(%s,%s,%s)' % ('myAlarm', execCMD, wait_mins)
-    xbmc.executebuiltin(builtinCMD.encode('latin-1'))
-
-def cancelAlarm():
-    builtinCMD = 'XBMC.CancelAlarm(myAlarm)'
-    xbmc.executebuiltin(builtinCMD.encode('latin-1'))
-
-# called from a context menu on a song object
-def setAlarm(object_id):
-    ampache.setSetting(id='alarm_song', value=str(object_id) )
-    
 def addLink(name,url,iconimage,node):
         ok=True
         liz=xbmcgui.ListItem(name, iconImage=iconimage, thumbnailImage=iconimage)
@@ -74,8 +53,6 @@ def addLinks(elem):
         liz.setProperty("IsPlayable", "true")
         song_elem = node.find("song")
         song_id = int(node.attrib["id"])
-        action = 'XBMC.RunPlugin(%s?object_id=%s&mode=10)' % ( sys.argv[0],song_id )
-        cm.append( ( "Set as Alarm", action  ) )
         liz.addContextMenuItems(cm)
         track_parameters = { "mode": 8, "object_id": song_id}
         url = sys.argv[0] + '?' + urllib.urlencode(track_parameters)
@@ -98,21 +75,15 @@ def play_track(id):
     li.setInfo("music", { "title": node.findtext("title") })
     xbmcplugin.setResolvedUrl(handle=int(sys.argv[1]), succeeded=True, listitem=li)
 
-# Wrapper around play_track to make sure that we have a valid Ampache session.
-# TODO: We shouldn't force a new session if we already have one.
-def play_alarm():
-    AMPACHECONNECT()
-    play_track(ampache.getSetting('alarm_song'))
-
 # Main function for adding xbmc plugin elements
 def addDir(name,object_id,mode,iconimage,elem=None):
     liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
-    liz.setInfo( type="Music", infoLabels={ "Title": name } )
+    liz.setInfo( type="Music", infoLabels={ "Titel": name } )
     try:
         artist_elem = elem.find("artist")
         artist_id = int(artist_elem.attrib["id"]) 
         cm = []
-        cm.append( ( "Show all albums from artist", "XBMC.Container.Update(%s?object_id=%s&mode=2)" % ( sys.argv[0],artist_id ) ) )
+        cm.append( ( "Zeige alle Alben des Künstler", "XBMC.Container.Update(%s?object_id=%s&mode=2)" % ( sys.argv[0],artist_id ) ) )
         liz.addContextMenuItems(cm)
     except:
         pass
@@ -142,7 +113,7 @@ def getFilterFromUser():
     loop = True
     while(loop):
         kb = xbmc.Keyboard('', '', True)
-        kb.setHeading('Enter Search Filter')
+        kb.setHeading('Suchmuster:')
         kb.setHiddenInput(False)
         kb.doModal()
         if (kb.isConfirmed()):
@@ -283,18 +254,11 @@ print "ObjectID: "+str(object_id)
 if mode==None:
     print ""
     elem = AMPACHECONNECT()
-    addDir("Search...",0,4,"DefaultFolder.png")
-    addDir("Recent...",0,5,"DefaultFolder.png")
-    addDir("Random...",0,7,"DefaultFolder.png")
-    addDir("Artists (" + str(elem.findtext("artists")) + ")",None,1,"DefaultFolder.png")
-    addDir("Albums (" + str(elem.findtext("albums")) + ")",None,2,"DefaultFolder.png")
-    liz=xbmcgui.ListItem('Set Alarm')
-    url=sys.argv[0]+"?mode=11"
-    ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=url,listitem=liz)
-    liz=xbmcgui.ListItem('Cancel Alarm')
-    url=sys.argv[0]+"?mode=12"
-    ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=url,listitem=liz)
-
+    addDir("Durchsuchen",0,4,"DefaultFolder.png")
+    addDir("Kürzlich gespielt",0,5,"DefaultFolder.png")
+    addDir("Zufällige Songs",0,7,"DefaultFolder.png")
+    addDir("Künstler (" + str(elem.findtext("artists")) + ")",None,1,"DefaultFolder.png")
+    addDir("Alben (" + str(elem.findtext("albums")) + ")",None,2,"DefaultFolder.png")
 elif mode==1:
     if object_id == 99999:
         thisFilter = getFilterFromUser()
@@ -384,39 +348,27 @@ elif mode==3:
             GETSONGS(objectid=object_id)
 
 elif mode==4:
-    addDir("Search Artists...",99999,1,"DefaultFolder.png")
-    addDir("Search Albums...",99999,2,"DefaultFolder.png")
-    addDir("Search Songs...",99999,3,"DefaultFolder.png")
+    addDir("Künstler Durchsuchen",99999,1,"DefaultFolder.png")
+    addDir("Alben Durchsuchen",99999,2,"DefaultFolder.png")
+    addDir("Songs Durchsuchen",99999,3,"DefaultFolder.png")
 
 elif mode==5:
-    addDir("Recent Artists...",99998,6,"DefaultFolder.png")
-    addDir("Recent Albums...",99997,6,"DefaultFolder.png")
-    addDir("Recent Songs...",99996,6,"DefaultFolder.png")
+    addDir("Kürzlich gespielte Künstler",99998,6,"DefaultFolder.png")
+    addDir("Kürzlich gespielte Alben",99997,6,"DefaultFolder.png")
+    addDir("Kürzlich gespielte Songs",99996,6,"DefaultFolder.png")
 
 elif mode==6:
-    addDir("Last Update",99998,99999-object_id,"DefaultFolder.png")
-    addDir("1 Week",99997,99999-object_id,"DefaultFolder.png")
-    addDir("1 Month",99996,99999-object_id,"DefaultFolder.png")
-    addDir("3 Months",99995,99999-object_id,"DefaultFolder.png")
+    addDir("Letztes Update",99998,99999-object_id,"DefaultFolder.png")
+    addDir("1 Woche",99997,99999-object_id,"DefaultFolder.png")
+    addDir("1 Monat",99996,99999-object_id,"DefaultFolder.png")
+    addDir("3 Monate",99995,99999-object_id,"DefaultFolder.png")
 
 elif mode==7:
-    addDir("Refresh...",0,7,os.path.join(imagepath, 'refresh_icon.png'))
+    addDir("Refresh!",0,7,os.path.join(imagepath, 'refresh_icon.png'))
     get_random_albums()
 
 elif mode==8:
     play_track(object_id)
-
-elif mode==9:
-    play_alarm()
-
-elif mode==10:
-    setAlarm(object_id)
-
-elif mode==11:
-    enableAlarm()
-
-elif mode==12:
-    cancelAlarm()
 
 if mode < 9:
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
