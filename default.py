@@ -162,7 +162,7 @@ def AMPACHECONNECT():
     hasher = python_SHA256.new()
     hasher.update(myTimeStamp + myKey)
     myPassphrase = hasher.hexdigest()
-    myURL = ampache.getSetting("server") + 'server/xml.server.php?action=handshake&auth='
+    myURL = ampache.getSetting("server") + '/server/xml.server.php?action=handshake&auth='
     myURL += myPassphrase + "&timestamp=" + myTimeStamp
     myURL += '&version=350001&user=' + ampache.getSetting("username")
     xbmc.log(myURL,xbmc.LOGNOTICE)
@@ -231,7 +231,7 @@ def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0):
         elem = AMPACHECONNECT()
 
     token=ampache.getSetting('token')    
-    thisURL = ampache.getSetting("server") + 'server/xml.server.php?action=' + action 
+    thisURL = ampache.getSetting("server") + '/server/xml.server.php?action=' + action 
     thisURL += '&auth=' + token
     thisURL += '&limit=' +str(limit)
     thisURL += '&offset=' +str(offset)

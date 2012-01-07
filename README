@@ -1,1 +1,5 @@
 ampache-xbmc-plugin
+
+	This is a plugin for XBMC providing basic connectivity to the Streaming Software Ampache.
+
+	If you want to use it, zip it up and add it to your XBMC via System->AddOns->Install from ZIP.
