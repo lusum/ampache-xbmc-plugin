@@ -149,7 +149,7 @@ def AMPACHECONNECT():
     ampache.setSetting('token-exp',str(nTime+24000))
     return elem
 
-def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
+def ampache_http_request(action,add=None, filter=None, limit=10000, offset=0):
     thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset)
     req = urllib2.Request(thisURL)
     response = urllib2.urlopen(req)
@@ -185,7 +185,7 @@ def get_items(object_type, artist=None, add=None, filter=None):
             image = node.findtext("art")
         addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
 
-def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0):
+def GETSONGS(objectid=None,filter=None,add=None,limit=10000,offset=0):
     xbmcplugin.setContent(int(sys.argv[1]), 'songs')
     if filter:
         action = 'songs'
@@ -197,7 +197,7 @@ def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0):
     elem = ampache_http_request(action,add=add,filter=filter)
     addLinks(elem)
 
-def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0):
+def build_ampache_url(action,filter=None,add=None,limit=10000,offset=0):
     tokenexp = int(ampache.getSetting('token-exp'))
     if int(time.time()) > tokenexp:
         print "refreshing token..."
