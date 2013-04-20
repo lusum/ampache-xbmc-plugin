@@ -78,12 +78,12 @@ def play_track(id):
 # Main function for adding xbmc plugin elements
 def addDir(name,object_id,mode,iconimage,elem=None):
     liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
-    liz.setInfo( type="Music", infoLabels={ "Titel": name } )
+    liz.setInfo( type="Music", infoLabels={ "Title": name } )
     try:
         artist_elem = elem.find("artist")
         artist_id = int(artist_elem.attrib["id"]) 
         cm = []
-        cm.append( ( "Zeige alle Alben des Künstler", "XBMC.Container.Update(%s?object_id=%s&mode=2)" % ( sys.argv[0],artist_id ) ) )
+        cm.append( ( "Show all albums from artist", "XBMC.Container.Update(%s?object_id=%s&mode=2)" % ( sys.argv[0],artist_id ) ) )
         liz.addContextMenuItems(cm)
     except:
         pass
@@ -113,7 +113,7 @@ def getFilterFromUser():
     loop = True
     while(loop):
         kb = xbmc.Keyboard('', '', True)
-        kb.setHeading('Suchmuster:')
+        kb.setHeading('Enter Search Filter')
         kb.setHiddenInput(False)
         kb.doModal()
         if (kb.isConfirmed()):
@@ -254,11 +254,11 @@ print "ObjectID: "+str(object_id)
 if mode==None:
     print ""
     elem = AMPACHECONNECT()
-    addDir("Durchsuchen",0,4,"DefaultFolder.png")
-    addDir("Kürzlich gespielt",0,5,"DefaultFolder.png")
-    addDir("Zufällige Songs",0,7,"DefaultFolder.png")
-    addDir("Künstler (" + str(elem.findtext("artists")) + ")",None,1,"DefaultFolder.png")
-    addDir("Alben (" + str(elem.findtext("albums")) + ")",None,2,"DefaultFolder.png")
+    addDir("Search...",0,4,"DefaultFolder.png")
+    addDir("Recent...",0,5,"DefaultFolder.png")
+    addDir("Random...",0,7,"DefaultFolder.png")
+    addDir("Artists (" + str(elem.findtext("artists")) + ")",None,1,"DefaultFolder.png")
+    addDir("Albums (" + str(elem.findtext("albums")) + ")",None,2,"DefaultFolder.png")
 elif mode==1:
     if object_id == 99999:
         thisFilter = getFilterFromUser()
@@ -348,20 +348,20 @@ elif mode==3:
             GETSONGS(objectid=object_id)
 
 elif mode==4:
-    addDir("Künstler Durchsuchen",99999,1,"DefaultFolder.png")
-    addDir("Alben Durchsuchen",99999,2,"DefaultFolder.png")
-    addDir("Songs Durchsuchen",99999,3,"DefaultFolder.png")
+    addDir("Search Artists...",99999,1,"DefaultFolder.png")
+    addDir("Search Albums...",99999,2,"DefaultFolder.png")
+    addDir("Search Songs...",99999,3,"DefaultFolder.png")
 
 elif mode==5:
-    addDir("Kürzlich gespielte Künstler",99998,6,"DefaultFolder.png")
-    addDir("Kürzlich gespielte Alben",99997,6,"DefaultFolder.png")
-    addDir("Kürzlich gespielte Songs",99996,6,"DefaultFolder.png")
+    addDir("Recent Artists...",99998,6,"DefaultFolder.png")
+    addDir("Recent Albums...",99997,6,"DefaultFolder.png")
+    addDir("Recent Songs...",99996,6,"DefaultFolder.png")
 
 elif mode==6:
-    addDir("Letztes Update",99998,99999-object_id,"DefaultFolder.png")
-    addDir("1 Woche",99997,99999-object_id,"DefaultFolder.png")
-    addDir("1 Monat",99996,99999-object_id,"DefaultFolder.png")
-    addDir("3 Monate",99995,99999-object_id,"DefaultFolder.png")
+    addDir("Last Update",99998,99999-object_id,"DefaultFolder.png")
+    addDir("1 Week",99997,99999-object_id,"DefaultFolder.png")
+    addDir("1 Month",99996,99999-object_id,"DefaultFolder.png")
+    addDir("3 Months",99995,99999-object_id,"DefaultFolder.png")
 
 elif mode==7:
     addDir("Refresh!",0,7,os.path.join(imagepath, 'refresh_icon.png'))
