@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+import socket
 # Shared resources
 BASE_RESOURCE_PATH = os.path.join( os.getcwd(), "resources" )
 sys.path.append( os.path.join( BASE_RESOURCE_PATH, "lib" ) )
@@ -124,6 +125,7 @@ def getFilterFromUser():
     return(filter)
 
 def AMPACHECONNECT():
+    socket.setdefaulttimeout(100)
     nTime = int(time.time())
     myTimeStamp = str(nTime)
     sdf = ampache.getSetting("password")
