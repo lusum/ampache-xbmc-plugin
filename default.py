@@ -186,7 +186,7 @@ def get_items(object_type, artist=None, add=None, filter=None):
 def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0):
     xbmcplugin.setContent(int(sys.argv[1]), 'songs')
     if filter:
-        action == 'songs'
+        action = 'songs'
     elif objectid:
         action = 'album_songs'
         filter = objectid
