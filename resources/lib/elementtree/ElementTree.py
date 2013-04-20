@@ -1239,6 +1239,11 @@ class XMLTreeBuilder:
     # @param data Encoded data.
 
     def feed(self, data):
+#        dt = data.splitlines()
+#        num = 0
+#        for i in dt:
+#            num = num + 1
+#            print str(num) + " " + i + "\n"
         self._parser.Parse(data, 0)
 
     ##
