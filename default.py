@@ -149,7 +149,7 @@ def AMPACHECONNECT():
     ampache.setSetting('token-exp',str(nTime+24000))
     return elem
 
-def ampache_http_request(action,add=None, filter=None, limit=10000, offset=0):
+def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
     thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset)
     req = urllib2.Request(thisURL)
     response = urllib2.urlopen(req)
@@ -168,13 +168,13 @@ def ampache_http_request(action,add=None, filter=None, limit=10000, offset=0):
             elem = tree.getroot()
     return elem
     
-def get_items(object_type, artist=None, add=None, filter=None):
+def get_items(object_type, artist=None, add=None, filter=None, limit=5000):
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
     action = object_type
     if artist:
         filter = artist
         action = 'artist_albums'
-    elem = ampache_http_request(action,add=add,filter=filter)
+    elem = ampache_http_request(action,add=add,filter=filter, limit=limit)
     if object_type == 'artists':
         mode = 2
         image = "DefaultFolder.png"
@@ -185,7 +185,7 @@ def get_items(object_type, artist=None, add=None, filter=None):
             image = node.findtext("art")
         addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
 
-def GETSONGS(objectid=None,filter=None,add=None,limit=10000,offset=0):
+def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0):
     xbmcplugin.setContent(int(sys.argv[1]), 'songs')
     if filter:
         action = 'songs'
@@ -197,7 +197,7 @@ def GETSONGS(objectid=None,filter=None,add=None,limit=10000,offset=0):
     elem = ampache_http_request(action,add=add,filter=filter)
     addLinks(elem)
 
-def build_ampache_url(action,filter=None,add=None,limit=10000,offset=0):
+def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0):
     tokenexp = int(ampache.getSetting('token-exp'))
     if int(time.time()) > tokenexp:
         print "refreshing token..."
@@ -287,7 +287,9 @@ elif mode==1:
         nd = d + dt
         get_items(object_type="artists",add=nd.isoformat())
     else:
-        get_items(object_type="artists")
+        elem = AMPACHECONNECT()
+        limit=elem.findtext("artists")
+        get_items(object_type="artists", limit=limit)
        
 elif mode==2:
         print ""
@@ -318,7 +320,9 @@ elif mode==2:
         elif object_id:
             get_items(object_type="albums",artist=object_id)
         else:
-            get_items(object_type="albums")
+            elem = AMPACHECONNECT()
+            limit=elem.findtext("albums")
+            get_items(object_type="albums", limit=limit)
         
 elif mode==3:
         print ""
@@ -366,7 +370,7 @@ elif mode==6:
     addDir("3 Months",99995,99999-object_id,"DefaultFolder.png")
 
 elif mode==7:
-    addDir("Refresh!",0,7,os.path.join(imagepath, 'refresh_icon.png'))
+    addDir("Refresh..",0,7,os.path.join(imagepath, 'refresh_icon.png'))
     get_random_albums()
 
 elif mode==8:
