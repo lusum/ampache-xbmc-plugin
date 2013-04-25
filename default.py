@@ -174,6 +174,7 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000):
     if artist:
         filter = artist
         action = 'artist_albums'
+        addDir("All Songs",artist,8, "DefaultFolder.png")
     elem = ampache_http_request(action,add=add,filter=filter, limit=limit)
     if object_type == 'artists':
         mode = 2
@@ -185,12 +186,15 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000):
             image = node.findtext("art")
         addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
 
-def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0):
+def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0, artist_bool=False):
     xbmcplugin.setContent(int(sys.argv[1]), 'songs')
     if filter:
         action = 'songs'
     elif objectid:
-        action = 'album_songs'
+        if artist_bool:
+            action = 'artist_songs'
+        else:
+            action = 'album_songs'
         filter = objectid
     else:
         action = 'songs'
@@ -396,21 +400,23 @@ elif mode==6:
     addDir("3 Months",99995,99999-object_id,"DefaultFolder.png")
 
 elif mode==7:
-    addDir("Random Artists...",99994,8,"DefaultFolder.png")
-    addDir("Random Albums...",99993,8,"DefaultFolder.png")
-    addDir("Random Songs...",99992,8,"DefaultFolder.png")
+    addDir("Random Artists...",99999,8,"DefaultFolder.png")
+    addDir("Random Albums...",99998,8,"DefaultFolder.png")
+    addDir("Random Songs...",99997,8,"DefaultFolder.png")
 
 elif mode==8:
     print ""
-    if object_id == 99994:
-        addDir("Refresh..",99994,8,os.path.join(imagepath, 'refresh_icon.png'))
+    if object_id == 99999:
+        addDir("Refresh..",99999,8,os.path.join(imagepath, 'refresh_icon.png'))
         get_random_artists()
-    if object_id == 99993:
-        addDir("Refresh..",99993,8,os.path.join(imagepath, 'refresh_icon.png'))
+    if object_id == 99998:
+        addDir("Refresh..",99998,8,os.path.join(imagepath, 'refresh_icon.png'))
         get_random_albums()
-    if object_id == 99992:
-        addDir("Refresh..",99992,8,os.path.join(imagepath, 'refresh_icon.png'))
+    if object_id == 99997:
+        addDir("Refresh..",99997,8,os.path.join(imagepath, 'refresh_icon.png'))
         get_random_songs()
+    else:
+        GETSONGS(objectid=object_id, artist_bool=True )
 
 elif mode==9:
     play_track(object_id)
