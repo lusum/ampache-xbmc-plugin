@@ -403,15 +403,12 @@ elif mode==7:
 elif mode==8:
     print ""
     if object_id == 99994:
-        print "4"
         addDir("Refresh..",99994,8,os.path.join(imagepath, 'refresh_icon.png'))
         get_random_artists()
     if object_id == 99993:
-        print "3"
         addDir("Refresh..",99993,8,os.path.join(imagepath, 'refresh_icon.png'))
         get_random_albums()
     if object_id == 99992:
-        print "2"
         addDir("Refresh..",99992,8,os.path.join(imagepath, 'refresh_icon.png'))
         get_random_songs()
 
