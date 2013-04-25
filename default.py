@@ -73,7 +73,7 @@ def play_track(id):
     for thisnode in elem:
         node = thisnode
     li = xbmcgui.ListItem(label=node.findtext("title").encode("utf-8"), thumbnailImage=node.findtext("art"), path=node.findtext("url"))
-    li.setInfo("music", { "title": node.findtext("title") })
+    li.setInfo("music", { "artist" : node.findtext("artist") , "album" : node.findtext("album") , "title": node.findtext("title") })
     xbmcplugin.setResolvedUrl(handle=int(sys.argv[1]), succeeded=True, listitem=li)
 
 # Main function for adding xbmc plugin elements
