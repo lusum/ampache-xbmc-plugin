@@ -39,7 +39,7 @@ def addLink(name,url,iconimage,node):
         ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=url,listitem=liz)
         return ok
 
-# Used to populate items for songs on XBMC. Calls plugin script with mode == 8 and object_id == (ampache song id)
+# Used to populate items for songs on XBMC. Calls plugin script with mode == 9 and object_id == (ampache song id)
 # TODO: Merge with addDir(). Same basic idea going on, this one adds links all at once, that one does it one at a time
 #       Also, some property things, some different context menu things.
 def addLinks(elem):
@@ -55,7 +55,7 @@ def addLinks(elem):
         song_elem = node.find("song")
         song_id = int(node.attrib["id"])
         liz.addContextMenuItems(cm)
-        track_parameters = { "mode": 8, "object_id": song_id}
+        track_parameters = { "mode": 9, "object_id": song_id}
         url = sys.argv[0] + '?' + urllib.urlencode(track_parameters)
         tu= (url,liz)
         li.append(tu)
@@ -229,6 +229,32 @@ def get_random_albums():
 	    fullname += " - "
 	    fullname += node.findtext("artist").encode("utf-8")
 	addDir(fullname,node.attrib["id"],3,node.findtext("art"),node)        
+  
+def get_random_artists():
+    xbmcplugin.setContent(int(sys.argv[1]), 'artists')
+    elem = AMPACHECONNECT()
+    artists = int(elem.findtext('artists'))
+    print artists
+    random_artists = (int(ampache.getSetting("random_artists"))*3)+3
+    print random_artists
+    seq = random.sample(xrange(artists),random_artists)
+    for artist_id in seq:
+        elem = ampache_http_request('artists',offset=artist_id,limit=1)
+        for node in elem:
+	    fullname = node.findtext("name").encode("utf-8")
+	addDir(fullname,node.attrib["id"],2,node.findtext("art"),node)        
+
+def get_random_songs():
+    xbmcplugin.setContent(int(sys.argv[1]), 'songs')
+    elem = AMPACHECONNECT()
+    songs = int(elem.findtext('songs'))
+    print songs
+    random_songs = (int(ampache.getSetting("random_songs"))*3)+3
+    print random_songs
+    seq = random.sample(xrange(songs),random_songs)
+    for song_id in seq:
+        elem = ampache_http_request('songs',offset=song_id,limit=1)
+        addLinks(elem)
 
 
 params=get_params()
@@ -370,11 +396,27 @@ elif mode==6:
     addDir("3 Months",99995,99999-object_id,"DefaultFolder.png")
 
 elif mode==7:
-    addDir("Refresh..",0,7,os.path.join(imagepath, 'refresh_icon.png'))
-    get_random_albums()
+    addDir("Random Artists...",99994,8,"DefaultFolder.png")
+    addDir("Random Albums...",99993,8,"DefaultFolder.png")
+    addDir("Random Songs...",99992,8,"DefaultFolder.png")
 
 elif mode==8:
+    print ""
+    if object_id == 99994:
+        print "4"
+        addDir("Refresh..",99994,8,os.path.join(imagepath, 'refresh_icon.png'))
+        get_random_artists()
+    if object_id == 99993:
+        print "3"
+        addDir("Refresh..",99993,8,os.path.join(imagepath, 'refresh_icon.png'))
+        get_random_albums()
+    if object_id == 99992:
+        print "2"
+        addDir("Refresh..",99992,8,os.path.join(imagepath, 'refresh_icon.png'))
+        get_random_songs()
+
+elif mode==9:
     play_track(object_id)
 
-if mode < 9:
+if mode < 10:
     xbmcplugin.endOfDirectory(int(sys.argv[1]))

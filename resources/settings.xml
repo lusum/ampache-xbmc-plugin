@@ -2,10 +2,12 @@
    <setting id="server" type="text" label="30000" default="http://127.0.0.1/ampache/"/>
    <setting id="username" type="text" label="30001" default="ampache"/>
    <setting id="password" type="text" label="30002" default="ampache"/>
-   <setting id="random_albums" type="enum" label="30003" values="3|6|9|12|15" default="1"/>
-   <setting id="alarm_song" type="text" label="30004" default="1001"/>
-   <setting id="alarm_hour" type="number" label="30005" default="6"/>
-   <setting id="alarm_minute" type="number" label="30006" default="34"/>
-   <setting id="token" type="text" label="30007" />
-   <setting id="token-exp" type="text" label="30008" />
+   <setting id="random_artists" type="enum" label="30003" values="3|6|9|12|15" default="1"/>
+   <setting id="random_albums" type="enum" label="30004" values="3|6|9|12|15" default="1"/>
+   <setting id="random_songs" type="enum" label="30005" values="3|6|9|12|15" default="1"/>
+   <setting id="alarm_song" type="text" label="30006" default="1001"/>
+   <setting id="alarm_hour" type="number" label="30007" default="6"/>
+   <setting id="alarm_minute" type="number" label="30008" default="34"/>
+   <setting id="token" type="text" label="30009" />
+   <setting id="token-exp" type="text" label="30010" />
 </settings>

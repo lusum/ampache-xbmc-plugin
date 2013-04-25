@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <addon
   id="plugin.audio.ampache"
-  version="0.4.1"
-  name="ampache"
-  provider-name="mike better">
+  version="0.4.2-devel"
+  name="Ampache"
+  provider-name="mike better-lusum">
   <requires>
    <import addon="xbmc.python" version="1.0"/>
   </requires>
