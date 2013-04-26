@@ -229,10 +229,10 @@ def get_random_albums():
     for album_id in seq:
         elem = ampache_http_request('albums',offset=album_id,limit=1)
         for node in elem:
-	    fullname = node.findtext("name").encode("utf-8")
-	    fullname += " - "
-	    fullname += node.findtext("artist").encode("utf-8")
-	addDir(fullname,node.attrib["id"],3,node.findtext("art"),node)        
+            fullname = node.findtext("name").encode("utf-8")
+            fullname += " - "
+            fullname += node.findtext("artist").encode("utf-8")
+            addDir(fullname,node.attrib["id"],3,node.findtext("art"),node)        
   
 def get_random_artists():
     xbmcplugin.setContent(int(sys.argv[1]), 'artists')
@@ -242,11 +242,12 @@ def get_random_artists():
     random_artists = (int(ampache.getSetting("random_artists"))*3)+3
     print random_artists
     seq = random.sample(xrange(artists),random_artists)
+    image = "DefaultFolder.png"
     for artist_id in seq:
         elem = ampache_http_request('artists',offset=artist_id,limit=1)
         for node in elem:
-	    fullname = node.findtext("name").encode("utf-8")
-	addDir(fullname,node.attrib["id"],2,node.findtext("art"),node)        
+            fullname = node.findtext("name").encode("utf-8")
+            addDir(fullname,node.attrib["id"],2,image,node)        
 
 def get_random_songs():
     xbmcplugin.setContent(int(sys.argv[1]), 'songs')
