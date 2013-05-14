@@ -34,7 +34,7 @@ imagepath = os.path.join(os.getcwd().replace(';', ''),'resources','images')
 
 def addLink(name,url,iconimage,node):
         ok=True
-        liz=xbmcgui.ListItem(name, iconImage=iconimage, thumbnailImage=iconimage)
+        liz=xbmcgui.ListItem(name, iconImage=iconimage, thumbnailImage=iconImage)
         liz.setInfo( type="Music", infoLabels={ "Title": node.findtext("title"), "Artist": node.findtext("artist"), "Album": node.findtext("album"), "TrackNumber": str(node.findtext("track")) } )
         ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=url,listitem=liz)
         return ok
