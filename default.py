@@ -78,7 +78,7 @@ def play_track(id):
 
 # Main function for adding xbmc plugin elements
 def addDir(name,object_id,mode,iconimage,elem=None):
-    liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
+    liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconImage)
     liz.setInfo( type="Music", infoLabels={ "Title": name } )
     try:
         artist_elem = elem.find("artist")
