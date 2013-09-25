@@ -49,7 +49,7 @@ def addLinks(elem):
     for node in elem:
         cm = []
         liz=xbmcgui.ListItem(label=node.findtext("title").encode("utf-8"), thumbnailImage=node.findtext("art"))
-        liz.setInfo( "music", { "title": node.findtext("title").encode("utf-8"), "artist": node.findtext("artist"), "album": node.findtext("album"), "ReleaseDate": str(node.findtext("year")) } )
+        liz.setInfo( "music", { "title": node.findtext("title").encode("utf-8"), "artist": node.findtext("artist"), "album": node.findtext("album"), "size": node.findtext("size"), "duration": node.findtext("time"),  "year": str(node.findtext("year")) } )
         liz.setProperty("mimetype", 'audio/mpeg')
         liz.setProperty("IsPlayable", "true")
         song_elem = node.find("song")
@@ -73,7 +73,7 @@ def play_track(id):
     for thisnode in elem:
         node = thisnode
     li = xbmcgui.ListItem(label=node.findtext("title").encode("utf-8"), thumbnailImage=node.findtext("art"), path=node.findtext("url"))
-    li.setInfo("music", { "artist" : node.findtext("artist") , "album" : node.findtext("album") , "title": node.findtext("title") })
+    li.setInfo("music", { "artist" : node.findtext("artist") , "album" : node.findtext("album") , "title": node.findtext("title") , "duration": node.findtext("time"), "size": node.findtext("size") })
     xbmcplugin.setResolvedUrl(handle=int(sys.argv[1]), succeeded=True, listitem=li)
 
 # Main function for adding xbmc plugin elements
