@@ -4,9 +4,6 @@
   version="0.4.2"
   name="Ampache"
   provider-name="mike better-lusum">
-  <requires>
-   <import addon="xbmc.python" version="1.0"/>
-  </requires>
   <extension 
     point="xbmc.python.pluginsource"
     library="default.py">
