@@ -153,20 +153,22 @@ def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
     thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset)
     req = urllib2.Request(thisURL)
     response = urllib2.urlopen(req)
-    tree=ET.parse(response)
+    contents = response.read()
+    contents = contents.replace("\0", "")
+    tree=ET.fromstring(contents)
     response.close()
-    elem = tree.getroot()
-    if elem.findtext("error"):
-        errornode = elem.find("error")
+    if tree.findtext("error"):
+        errornode = tree.find("error")
         if errornode.attrib["code"]=="401":
-            elem = AMPACHECONNECT()
+            tree = AMPACHECONNECT()
             thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset)
             req = urllib2.Request(thisURL)
             response = urllib2.urlopen(req)
-            tree=ET.parse(response)
+            contents = response.read()
+            tree=ET.fromstring(contents)
             response.close()
-            elem = tree.getroot()
-    return elem
+    return tree
+
     
 def get_items(object_type, artist=None, add=None, filter=None, limit=5000):
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
