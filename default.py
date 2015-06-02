@@ -6,7 +6,9 @@ import socket
 BASE_RESOURCE_PATH = os.path.join( os.getcwd(), "resources" )
 sys.path.append( os.path.join( BASE_RESOURCE_PATH, "lib" ) )
 
-import random,xbmcplugin,xbmcgui,python_SHA256, datetime, time, urllib,urllib2, elementtree.ElementTree as ET
+import random,xbmcplugin,xbmcgui, datetime, time, urllib,urllib2
+import xml.etree.ElementTree as ET
+from Crypto.Hash import SHA256
 
 try:
     # new XBMC 10.05 addons:
@@ -129,10 +131,10 @@ def AMPACHECONNECT():
     nTime = int(time.time())
     myTimeStamp = str(nTime)
     sdf = ampache.getSetting("password")
-    hasher = python_SHA256.new()
+    hasher = SHA256.new()
     hasher.update(ampache.getSetting("password"))
     myKey = hasher.hexdigest()
-    hasher = python_SHA256.new()
+    hasher = SHA256.new()
     hasher.update(myTimeStamp + myKey)
     myPassphrase = hasher.hexdigest()
     myURL = ampache.getSetting("server") + '/server/xml.server.php?action=handshake&auth='
