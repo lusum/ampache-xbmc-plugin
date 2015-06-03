@@ -2,8 +2,10 @@ import sys
 import os
 import time
 import socket
+import re
 # Shared resources
 BASE_RESOURCE_PATH = os.path.join( os.getcwd(), "resources" )
+cacheDir = os.path.join( os.getcwd(), "cache/" )
 
 import random,xbmcplugin,xbmcgui, datetime, time, urllib,urllib2
 import xml.etree.ElementTree as ET
@@ -225,6 +227,9 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
         image = "DefaultFolder.png"
     for node in elem:
         if object_type == 'albums':
+            print "DEBUG: object_type - " + str(object_type)
+            print "DEBUG: Art - " + str(node.findtext("art"))
+            cacheArt(node.findtext("art"))
             image = node.findtext("art")
         addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
 
