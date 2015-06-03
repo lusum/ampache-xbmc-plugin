@@ -4,7 +4,6 @@ import time
 import socket
 # Shared resources
 BASE_RESOURCE_PATH = os.path.join( os.getcwd(), "resources" )
-sys.path.append( os.path.join( BASE_RESOURCE_PATH, "lib" ) )
 
 import random,xbmcplugin,xbmcgui, datetime, time, urllib,urllib2
 import xml.etree.ElementTree as ET
