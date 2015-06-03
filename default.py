@@ -34,6 +34,33 @@ except ImportError:
 ampache = xbmcaddon.Addon("plugin.audio.ampache")
 imagepath = os.path.join(os.getcwd().replace(';', ''),'resources','images')
 
+def cacheArt(url):
+	strippedAuth = url.split('&')
+	imageID = re.search(r"id=(\d+)", strippedAuth[0])
+
+	if os.path.exists(cacheDir + imageID.group(1) + ".png"):
+		print "DEBUG: png cached"
+		return cacheDir + imageID.group(1) + ".png"
+	elif os.path.exists(cacheDir + imageID.group(1) + ".jpg"):
+		print "DEBUG: jpg cached"
+		return cacheDir + imageID.group(1) + ".jpg"
+	else:
+		print "DEBUG: File needs fetching"
+		opener = urllib.urlopen(url)
+		if opener.headers.maintype == 'image':
+			extension = opener.headers['content-type']
+			tmpExt = extension.split("/")
+			if tmpExt[1] == "jpeg":
+				fname = imageID.group(1) + '.jpg'
+			else:
+				fname = imageID.group(1) + '.' + tmpExt[1]
+			open( cacheDir + fname, 'wb').write(opener.read())
+			print "DEBUG: Cached " + fname
+			return fname
+		else:
+			print "DEBUG: It didnt work"
+			return False
+
 def addLink(name,url,iconimage,node):
         ok=True
         liz=xbmcgui.ListItem(name, iconImage=iconimage, thumbnailImage=iconimage)
@@ -172,28 +199,43 @@ def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
     return tree
 
     
-def get_items(object_type, artist=None, add=None, filter=None, limit=5000):
+def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playlist=None, playlist_song=None):
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
     action = object_type
     if artist:
         filter = artist
         action = 'artist_albums'
         addDir("All Songs",artist,8, "DefaultFolder.png")
+    elif playlist:
+        action = 'playlist'
+        filter = playlist
+    elif playlist_song:
+        action = 'playlist_song'
+        filter = playlist_song
     elem = ampache_http_request(action,add=add,filter=filter, limit=limit)
     if object_type == 'artists':
         mode = 2
         image = "DefaultFolder.png"
     elif object_type == 'albums':
         mode = 3
+    elif object_type == 'playlists':
+        mode = 14
+        image = "DefaultFolder.png"
+    elif object_type == 'playlist_song':
+        mode = 15
+        image = "DefaultFolder.png"
     for node in elem:
         if object_type == 'albums':
             image = node.findtext("art")
         addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
 
-def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0, artist_bool=False):
+def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0,artist_bool=False,playlist=None):
     xbmcplugin.setContent(int(sys.argv[1]), 'songs')
     if filter:
         action = 'songs'
+    elif playlist:
+        action = 'playlist_songs'
+        filter = playlist
     elif objectid:
         if artist_bool:
             action = 'artist_songs'
@@ -296,6 +338,7 @@ if mode==None:
     addDir("Random...",0,7,"DefaultFolder.png")
     addDir("Artists (" + str(elem.findtext("artists")) + ")",None,1,"DefaultFolder.png")
     addDir("Albums (" + str(elem.findtext("albums")) + ")",None,2,"DefaultFolder.png")
+    addDir("Playlists (" + str(elem.findtext("playlists")) + ")",None,13,"DefaultFolder.png")
 elif mode==1:
     if object_id == 99999:
         thisFilter = getFilterFromUser()
@@ -426,5 +469,75 @@ elif mode==8:
 elif mode==9:
     play_track(object_id)
 
-if mode < 10:
+elif mode==13:
+#    print "Hello Ampache!!"
+#    get_items(object_type="playlists")
+        print "Hello Ampache!!!"
+        if object_id == 99999:
+            thisFilter = getFilterFromUser()
+            if thisFilter:
+                get_items(object_type="playlists",filter=thisFilter)
+        elif object_id == 99998:
+            elem = AMPACHECONNECT()
+            update = elem.findtext("add")        
+            xbmc.log(update[:10],xbmc.LOGNOTICE)
+            get_items(object_type="playlists",add=update[:10])
+        elif object_id == 99997:
+            d = datetime.date.today()
+            dt = datetime.timedelta(days=-7)
+            nd = d + dt
+            get_items(object_type="playlists",add=nd.isoformat())
+        elif object_id == 99996:
+            d = datetime.date.today()
+            dt = datetime.timedelta(days=-30)
+            nd = d + dt
+            get_items(object_type="playlists",add=nd.isoformat())
+        elif object_id == 99995:
+            d = datetime.date.today()
+            dt = datetime.timedelta(days=-90)
+            nd = d + dt
+            get_items(object_type="playlists",add=nd.isoformat())
+        elif object_id:
+            get_items(object_type="playlists",artist=object_id)
+        else:
+            get_items(object_type="playlists")
+
+elif mode==14:
+#    print "Hello Ampache!!"
+#    get_items(object_type="playlists")
+        print "Hello Ampache Playlists!!!"
+        if object_id == 99999:
+            thisFilter = getFilterFromUser()
+            if thisFilter:
+                get_items(object_type="playlist_song",filter=thisFilter)
+        elif object_id == 99998:
+            elem = AMPACHECONNECT()
+            update = elem.findtext("add")        
+            xbmc.log(update[:10],xbmc.LOGNOTICE)
+            get_items(object_type="playlist_song",add=update[:10])
+        elif object_id == 99997:
+            d = datetime.date.today()
+            dt = datetime.timedelta(days=-7)
+            nd = d + dt
+            get_items(object_type="playlist_song",add=nd.isoformat())
+        elif object_id == 99996:
+            d = datetime.date.today()
+            dt = datetime.timedelta(days=-30)
+            nd = d + dt
+            get_items(object_type="playlist_song",add=nd.isoformat())
+        elif object_id == 99995:
+            d = datetime.date.today()
+            dt = datetime.timedelta(days=-90)
+            nd = d + dt
+            get_items(object_type="playlist_song",add=nd.isoformat())
+        elif object_id:
+            get_items(object_type="playlist_song",playlist=object_id)
+        else:
+            get_items(object_type="playlist_song")
+
+elif mode==15:
+    print "Hello Ampache Playlist1!!!"
+    GETSONGS(playlist=object_id)
+
+if mode < 19:
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
