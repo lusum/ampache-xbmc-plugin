@@ -155,7 +155,7 @@ def getFilterFromUser():
     return(filter)
 
 def AMPACHECONNECT():
-    socket.setdefaulttimeout(100)
+    socket.setdefaulttimeout(3600)
     nTime = int(time.time())
     myTimeStamp = str(nTime)
     sdf = ampache.getSetting("password")
