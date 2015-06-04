@@ -216,16 +216,18 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
         image = "DefaultFolder.png"
     for node in elem:
         if object_type == 'albums':
-            print "DEBUG: object_type - " + str(object_type)
-            print "DEBUG: Art - " + str(node.findtext("art"))
             image = node.findtext("art")
-        try:
-                artFilename = cacheArt(node.findtext("art"))
-        except NameError:
-        	addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
-        else:
+            print "DEBUG: object_type - " + str(object_type)
+            print "DEBUG: Art - " + str(image)
+            try:
+                artFilename = cacheArt(image)        
+            except NameError:
+                addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
+            else:
                 print "DEBUG: Art Filename: " + artFilename
-        	addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node, artFilename = artFilename)
+                addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node, artFilename = artFilename)
+        else:
+            addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
 
 def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0,artist_bool=False,playlist=None):
     xbmcplugin.setContent(int(sys.argv[1]), 'songs')
