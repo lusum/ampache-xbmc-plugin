@@ -5,7 +5,7 @@ import socket
 import re
 # Shared resources
 BASE_RESOURCE_PATH = os.path.join( os.getcwd(), "resources" )
-cacheDir = os.path.join( os.getcwd(), "resources/media" )
+cacheDir = os.path.join( os.getcwd(), "resources/media/" )
 
 import random,xbmcplugin,xbmcgui, datetime, time, urllib,urllib2
 import xml.etree.ElementTree as ET
@@ -78,7 +78,9 @@ def addLinks(elem):
     li=[]
     for node in elem:
         cm = []
-        liz=xbmcgui.ListItem(label=node.findtext("title").encode("utf-8"), thumbnailImage=node.findtext("art"))
+        albumArt = cacheArt(node.findtext("art"))
+        print "DEBUG: albumArt - " + albumArt
+        liz=xbmcgui.ListItem(label=node.findtext("title").encode("utf-8"), thumbnailImage=albumArt)
         liz.setInfo( "music", { "title": node.findtext("title").encode("utf-8"), "artist": node.findtext("artist"), "album": node.findtext("album"), "size": node.findtext("size"), "duration": node.findtext("time"),  "year": str(node.findtext("year")) } )
         liz.setProperty("mimetype", 'audio/mpeg')
         liz.setProperty("IsPlayable", "true")
@@ -102,13 +104,18 @@ def play_track(id):
     elem = ampache_http_request("song",filter=id)
     for thisnode in elem:
         node = thisnode
-    li = xbmcgui.ListItem(label=node.findtext("title").encode("utf-8"), thumbnailImage=node.findtext("art"), path=node.findtext("url"))
+    albumArt = cacheArt(node.findtext("art"))
+    li = xbmcgui.ListItem(label=node.findtext("title").encode("utf-8"), thumbnailImage=albumArt, path=node.findtext("url"))
     li.setInfo("music", { "artist" : node.findtext("artist") , "album" : node.findtext("album") , "title": node.findtext("title") , "duration": node.findtext("time"), "size": node.findtext("size") })
     xbmcplugin.setResolvedUrl(handle=int(sys.argv[1]), succeeded=True, listitem=li)
 
 # Main function for adding xbmc plugin elements
-def addDir(name,object_id,mode,iconimage,elem=None):
-    liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png",thumbnailImage=iconimage)
+def addDir(name,object_id,mode,iconimage,elem=None,artFilename=None):
+    if artFilename:
+        liz=xbmcgui.ListItem(name, iconImage=artFilename, thumbnailImage=artFilename)
+    else:
+        liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
+
     liz.setInfo( type="Music", infoLabels={ "Title": name } )
     try:
         artist_elem = elem.find("artist")
@@ -229,9 +236,15 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
         if object_type == 'albums':
             print "DEBUG: object_type - " + str(object_type)
             print "DEBUG: Art - " + str(node.findtext("art"))
-            cacheArt(node.findtext("art"))
+            artFilename = cacheArt(node.findtext("art"))
+            print "DEBUG: Art Filename: " + artFilename
             image = node.findtext("art")
-        addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
+        try:
+        	artFilename
+        except NameError:
+        	addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
+        else:
+        	addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node, artFilename = artFilename)
 
 def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0,artist_bool=False,playlist=None):
     xbmcplugin.setContent(int(sys.argv[1]), 'songs')
