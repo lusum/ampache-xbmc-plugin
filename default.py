@@ -1,39 +1,20 @@
 import sys
 import os
-import time
 import socket
 import re
-# Shared resources
-BASE_RESOURCE_PATH = os.path.join( os.getcwd(), "resources" )
-cacheDir = os.path.join( os.getcwd(), "resources/media/" )
-
 import random,xbmcplugin,xbmcgui, datetime, time, urllib,urllib2
 import xml.etree.ElementTree as ET
 from Crypto.Hash import SHA256
+import xbmcaddon
 
-try:
-    # new XBMC 10.05 addons:
-    import xbmcaddon
-except ImportError:
-    # old XBMC - create fake xbmcaddon module with same interface as new XBMC 10.05
-    class xbmcaddon:
-        """ fake xbmcaddon module """
-        __version__ = "(old XBMC)"
-        class Addon:
-            """ fake xbmcaddon.Addon class """
-            def __init__(self, id):
-                self.id = id
-            def getSetting(self, key):
-                return xbmcplugin.getSetting(key)
-            def setSetting(self, key, value):
-                xbmcplugin.setSetting(key, value)
-            def openSettings(self, key, value):
-                xbmc.openSettings()
-            def getLocalizedString(self, id):
-                return xbmc.getLocalizedString(id)
+# Shared resources
 
 ampache = xbmcaddon.Addon("plugin.audio.ampache")
-imagepath = os.path.join(os.getcwd().replace(';', ''),'resources','images')
+
+ampache_dir = xbmc.translatePath( ampache.getAddonInfo('path') )
+BASE_RESOURCE_PATH = os.path.join( ampache_dir, "resources" )
+cacheDir = os.path.join( BASE_RESOURCE_PATH , 'media/' )
+imagepath = os.path.join( BASE_RESOURCE_PATH ,'images')
 
 def cacheArt(url):
 	strippedAuth = url.split('&')
@@ -46,7 +27,7 @@ def cacheArt(url):
 		print "DEBUG: jpg cached"
 		return cacheDir + imageID.group(1) + ".jpg"
 	else:
-		print "DEBUG: File needs fetching"
+		print "DEBUG: File needs fetching " 
 		opener = urllib.urlopen(url)
 		if opener.headers.maintype == 'image':
 			extension = opener.headers['content-type']
@@ -60,7 +41,8 @@ def cacheArt(url):
 			return fname
 		else:
 			print "DEBUG: It didnt work"
-			return False
+                        raise NameError
+			#return False
 
 def addLink(name,url,iconimage,node):
         ok=True
@@ -236,14 +218,13 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
         if object_type == 'albums':
             print "DEBUG: object_type - " + str(object_type)
             print "DEBUG: Art - " + str(node.findtext("art"))
-            artFilename = cacheArt(node.findtext("art"))
-            print "DEBUG: Art Filename: " + artFilename
             image = node.findtext("art")
         try:
-        	artFilename
+                artFilename = cacheArt(node.findtext("art"))
         except NameError:
         	addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
         else:
+                print "DEBUG: Art Filename: " + artFilename
         	addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node, artFilename = artFilename)
 
 def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0,artist_bool=False,playlist=None):
