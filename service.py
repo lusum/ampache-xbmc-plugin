@@ -15,4 +15,5 @@ if __name__ == '__main__':
     for currentFile in os.listdir(cacheDir):
         print "processing file: " + str(currentFile)
         if any(currentFile.endswith(ext) for ext in extensions):
-            os.remove(currentFile)
+            pathDel = os.path.join( cacheDir, currentFile)
+            os.remove(pathDel)
