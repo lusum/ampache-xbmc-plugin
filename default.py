@@ -66,7 +66,10 @@ def addLinks(elem):
     li=[]
     for node in elem:
         cm = []
-        albumArt = cacheArt(node.findtext("art"))
+        try:
+            albumArt = cacheArt(node.findtext("art"))
+        except NameError:
+            albumArt = "DefaultFolder.png"
         print "DEBUG: albumArt - " + albumArt
         liz=xbmcgui.ListItem(label=node.findtext("title").encode("utf-8"), thumbnailImage=albumArt)
         liz.setInfo( "music", { "title": node.findtext("title").encode("utf-8"), "artist": node.findtext("artist"), "album": node.findtext("album"), "size": node.findtext("size"), "duration": node.findtext("time"),  "year": str(node.findtext("year")) } )
@@ -92,7 +95,10 @@ def play_track(id):
     elem = ampache_http_request("song",filter=id)
     for thisnode in elem:
         node = thisnode
-    albumArt = cacheArt(node.findtext("art"))
+    try:
+        albumArt = cacheArt(node.findtext("art"))
+    except NameError:
+        albumArt = "DefaultFolder.png"
     li = xbmcgui.ListItem(label=node.findtext("title").encode("utf-8"), thumbnailImage=albumArt, path=node.findtext("url"))
     li.setInfo("music", { "artist" : node.findtext("artist") , "album" : node.findtext("album") , "title": node.findtext("title") , "duration": node.findtext("time"), "size": node.findtext("size") })
     xbmcplugin.setResolvedUrl(handle=int(sys.argv[1]), succeeded=True, listitem=li)
