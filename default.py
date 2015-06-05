@@ -13,19 +13,24 @@ ampache = xbmcaddon.Addon("plugin.audio.ampache")
 
 ampache_dir = xbmc.translatePath( ampache.getAddonInfo('path') )
 BASE_RESOURCE_PATH = os.path.join( ampache_dir, "resources" )
-cacheDir = os.path.join( BASE_RESOURCE_PATH , 'media/' )
-imagepath = os.path.join( BASE_RESOURCE_PATH ,'images')
+mediaDir = os.path.join( BASE_RESOURCE_PATH , 'media' )
+cacheDir = os.path.join( mediaDir , 'cache' )
+imagepath = os.path.join( mediaDir ,'images')
 
 def cacheArt(url):
 	strippedAuth = url.split('&')
 	imageID = re.search(r"id=(\d+)", strippedAuth[0])
-
-	if os.path.exists(cacheDir + imageID.group(1) + ".png"):
+        
+        imageNamePng = imageID.group(1) + ".png"
+        imageNameJpg = imageID.group(1) + ".jpg"
+        pathPng = os.path.join( cacheDir , imageNamePng )
+        pathJpg = os.path.join( cacheDir , imageNameJpg )
+	if os.path.exists( pathPng ):
 		print "DEBUG: png cached"
-		return cacheDir + imageID.group(1) + ".png"
-	elif os.path.exists(cacheDir + imageID.group(1) + ".jpg"):
+		return pathPng
+        elif os.path.exists( pathJpg ):
 		print "DEBUG: jpg cached"
-		return cacheDir + imageID.group(1) + ".jpg"
+		return pathJpg
 	else:
 		print "DEBUG: File needs fetching " 
 		opener = urllib.urlopen(url)
@@ -33,10 +38,11 @@ def cacheArt(url):
 			extension = opener.headers['content-type']
 			tmpExt = extension.split("/")
 			if tmpExt[1] == "jpeg":
-				fname = imageID.group(1) + '.jpg'
+				fname = imageNameJpg
 			else:
 				fname = imageID.group(1) + '.' + tmpExt[1]
-			open( cacheDir + fname, 'wb').write(opener.read())
+                        pathJpg = os.path.join( cacheDir , fname )
+			open( pathJpg, 'wb').write(opener.read())
 			print "DEBUG: Cached " + fname
 			return fname
 		else:
@@ -222,6 +228,7 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
             try:
                 artFilename = cacheArt(image)        
             except NameError:
+                image = "DefaultFolder.png"
                 addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
             else:
                 print "DEBUG: Art Filename: " + artFilename
