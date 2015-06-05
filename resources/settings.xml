@@ -5,9 +5,6 @@
    <setting id="random_artists" type="enum" label="30003" values="3|6|9|12|15" default="1"/>
    <setting id="random_albums" type="enum" label="30004" values="3|6|9|12|15" default="1"/>
    <setting id="random_songs" type="enum" label="30005" values="3|6|9|12|15" default="1"/>
-   <setting id="alarm_song" type="text" label="30006" default="1001"/>
-   <setting id="alarm_hour" type="number" label="30007" default="6"/>
-   <setting id="alarm_minute" type="number" label="30008" default="34"/>
    <setting id="token" type="text" label="30009" />
    <setting id="token-exp" type="text" label="30010" />
 </settings>
