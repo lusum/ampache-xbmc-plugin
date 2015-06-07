@@ -228,6 +228,10 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
         image = "DefaultFolder.png"
     for node in elem:
         if object_type == 'albums':
+            fullname = node.findtext("name").encode("utf-8")
+            fullname += " - "
+            fullname += node.findtext("year").encode("utf-8")
+
             image = node.findtext("art")
             print "DEBUG: object_type - " + str(object_type)
             print "DEBUG: Art - " + str(image)
@@ -235,10 +239,10 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
                 artFilename = cacheArt(image)        
             except NameError:
                 image = "DefaultFolder.png"
-                addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
+                addDir(fullname,node.attrib["id"],mode,image,node)
             else:
                 print "DEBUG: Art Filename: " + artFilename
-                addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node, artFilename = artFilename)
+                addDir(fullname, node.attrib["id"],mode,image,node, artFilename = artFilename)
         else:
             addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
 
@@ -291,6 +295,8 @@ def get_random_albums():
             fullname = node.findtext("name").encode("utf-8")
             fullname += " - "
             fullname += node.findtext("artist").encode("utf-8")
+            fullname += " - "
+            fullname += node.findtext("year").encode("utf-8")
             addDir(fullname,node.attrib["id"],3,node.findtext("art"),node)        
   
 def get_random_artists():
