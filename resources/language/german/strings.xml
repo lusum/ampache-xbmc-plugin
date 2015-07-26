@@ -2,10 +2,7 @@
     <string id="30000">Ampache-Server URL</string>
     <string id="30001">Benutzername</string>
     <string id="30002">Passwort</string>
-    <string id="30003">Anzahl zufälliger Alben</string>
-    <string id="30004">Alarm Titel ID</string>
-    <string id="30005">Alarm Stunde</string>
-    <string id="30006">Alarm Minute</string>
-    <string id="30007">Token</string>
-    <string id="30008">Token Ablaufdatum</string>
+    <string id="30004">Anzahl zufälliger Alben</string>
+    <string id="30006">Token</string>
+    <string id="30007">Token Ablaufdatum</string>
 </strings>
