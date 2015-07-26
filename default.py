@@ -6,6 +6,7 @@ import random,xbmcplugin,xbmcgui, datetime, time, urllib,urllib2
 import xml.etree.ElementTree as ET
 from Crypto.Hash import SHA256
 import xbmcaddon
+import ssl
 
 # Shared resources
 
@@ -33,7 +34,11 @@ def cacheArt(url):
 		return pathJpg
 	else:
 		print "DEBUG: File needs fetching " 
-		opener = urllib.urlopen(url)
+                if(ampache.getSetting("disable_ssl_certs")):
+                    context = ssl._create_unverified_context()
+                    opener = urllib.urlopen(url, context=context)
+                else:
+		    opener = urllib.urlopen(url)
 		if opener.headers.maintype == 'image':
 			extension = opener.headers['content-type']
 			tmpExt = extension.split("/")
@@ -171,7 +176,11 @@ def AMPACHECONNECT():
     myURL += '&version=350001&user=' + ampache.getSetting("username")
     xbmc.log(myURL,xbmc.LOGNOTICE)
     req = urllib2.Request(myURL)
-    response = urllib2.urlopen(req)
+    if(ampache.getSetting("disable_ssl_certs")):
+        gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+        response = urllib2.urlopen(req, context=gcontext)
+    else:
+        response = urllib2.urlopen(req)
     tree=ET.parse(response)
     response.close()
     elem = tree.getroot()
@@ -183,7 +192,11 @@ def AMPACHECONNECT():
 def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
     thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset)
     req = urllib2.Request(thisURL)
-    response = urllib2.urlopen(req)
+    if(ampache.getSetting("disable_ssl_certs")):
+        gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+        response = urllib2.urlopen(req, context=gcontext)
+    else:
+        response = urllib2.urlopen(req)
     contents = response.read()
     contents = contents.replace("\0", "")
     tree=ET.fromstring(contents)
@@ -194,7 +207,11 @@ def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
             tree = AMPACHECONNECT()
             thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset)
             req = urllib2.Request(thisURL)
-            response = urllib2.urlopen(req)
+            if(ampache.getSetting("disable_ssl_certs")):
+                gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+                response = urllib2.urlopen(req, context=gcontext)
+            else:
+                response = urllib2.urlopen(req)
             contents = response.read()
             tree=ET.fromstring(contents)
             response.close()
