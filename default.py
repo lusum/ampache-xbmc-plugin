@@ -4,7 +4,7 @@ import socket
 import re
 import random,xbmcplugin,xbmcgui, datetime, time, urllib,urllib2
 import xml.etree.ElementTree as ET
-from Crypto.Hash import SHA256
+import hashlib
 import xbmcaddon
 import ssl
 
@@ -165,10 +165,10 @@ def AMPACHECONNECT():
     nTime = int(time.time())
     myTimeStamp = str(nTime)
     sdf = ampache.getSetting("password")
-    hasher = SHA256.new()
+    hasher = hashlib.new('sha256')
     hasher.update(ampache.getSetting("password"))
     myKey = hasher.hexdigest()
-    hasher = SHA256.new()
+    hasher = hashlib.new('sha256')
     hasher.update(myTimeStamp + myKey)
     myPassphrase = hasher.hexdigest()
     myURL = ampache.getSetting("server") + '/server/xml.server.php?action=handshake&auth='
