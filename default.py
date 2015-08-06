@@ -18,6 +18,14 @@ mediaDir = os.path.join( BASE_RESOURCE_PATH , 'media' )
 cacheDir = os.path.join( mediaDir , 'cache' )
 imagepath = os.path.join( mediaDir ,'images')
 
+def str_to_bool(s):
+    if s == 'true':
+        return True
+    elif s == 'false':
+        return False
+    else:
+        raise ValueError 
+
 def cacheArt(url):
 	strippedAuth = url.split('&')
 	imageID = re.search(r"id=(\d+)", strippedAuth[0])
@@ -34,7 +42,8 @@ def cacheArt(url):
 		return pathJpg
 	else:
 		print "DEBUG: File needs fetching " 
-                if(ampache.getSetting("disable_ssl_certs")):
+                ssl_certs_str = ampache.getSetting("disable_ssl_certs")
+                if str_to_bool(ssl_certs_str):
                     context = ssl._create_unverified_context()
                     opener = urllib.urlopen(url, context=context)
                 else:
@@ -176,7 +185,8 @@ def AMPACHECONNECT():
     myURL += '&version=350001&user=' + ampache.getSetting("username")
     xbmc.log(myURL,xbmc.LOGNOTICE)
     req = urllib2.Request(myURL)
-    if(ampache.getSetting("disable_ssl_certs")):
+    ssl_certs_str = ampache.getSetting("disable_ssl_certs")
+    if str_to_bool(ssl_certs_str):
         gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
         response = urllib2.urlopen(req, context=gcontext)
     else:
@@ -192,7 +202,8 @@ def AMPACHECONNECT():
 def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
     thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset)
     req = urllib2.Request(thisURL)
-    if(ampache.getSetting("disable_ssl_certs")):
+    ssl_certs_str = ampache.getSetting("disable_ssl_certs")
+    if str_to_bool(ssl_certs_str):
         gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
         response = urllib2.urlopen(req, context=gcontext)
     else:
@@ -207,7 +218,8 @@ def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
             tree = AMPACHECONNECT()
             thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset)
             req = urllib2.Request(thisURL)
-            if(ampache.getSetting("disable_ssl_certs")):
+            ssl_certs_str = ampache.getSetting("disable_ssl_certs")
+            if str_to_bool(ssl_certs_str):
                 gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
                 response = urllib2.urlopen(req, context=gcontext)
             else:
