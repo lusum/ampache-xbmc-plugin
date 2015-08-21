@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <addon
   id="plugin.audio.ampache"
-  version="0.5.0"
+  version="0.5.1"
   name="Ampache"
-  provider-name="lusum">
+	provider-name="lusum">
   <extension 
     point="xbmc.python.pluginsource"
     library="default.py">
