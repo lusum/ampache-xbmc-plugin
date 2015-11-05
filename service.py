@@ -5,7 +5,7 @@ import xbmcaddon
 if __name__ == '__main__':
     ampache = xbmcaddon.Addon("plugin.audio.ampache")
     ampache_dir = xbmc.translatePath( ampache.getAddonInfo('path') )
-    BASE_RESOURCE_PATH = os.path.join( ampache_dir, "resources" )
+    BASE_RESOURCE_PATH = os.path.join( ampache_dir, 'resources' )
     mediaDir = os.path.join( BASE_RESOURCE_PATH , 'media' )
     cacheDir = os.path.join( mediaDir , 'cache' )
     
