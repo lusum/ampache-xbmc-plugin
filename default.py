@@ -13,18 +13,20 @@ import ssl
 ampache = xbmcaddon.Addon("plugin.audio.ampache")
 
 ampache_dir = xbmc.translatePath( ampache.getAddonInfo('path') )
-BASE_RESOURCE_PATH = os.path.join( ampache_dir, "resources" )
+BASE_RESOURCE_PATH = os.path.join( ampache_dir, 'resources' )
 mediaDir = os.path.join( BASE_RESOURCE_PATH , 'media' )
 cacheDir = os.path.join( mediaDir , 'cache' )
 imagepath = os.path.join( mediaDir ,'images')
 
+#   sting to bool function : from string 'true' or 'false' to boolean True or
+#   False, raise ValueError
 def str_to_bool(s):
     if s == 'true':
         return True
     elif s == 'false':
         return False
     else:
-        raise ValueError 
+        raise ValueError
 
 def cacheArt(url):
 	strippedAuth = url.split('&')
@@ -64,39 +66,52 @@ def cacheArt(url):
                         raise NameError
 			#return False
 
-def addLink(name,url,iconimage,node):
-        ok=True
-        liz=xbmcgui.ListItem(name, iconImage=iconimage, thumbnailImage=iconimage)
-        liz.setInfo( type="Music", infoLabels={ "Title": node.findtext("title"), "Artist": node.findtext("artist"), "Album": node.findtext("album"), "TrackNumber": str(node.findtext("track")) } )
-        ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=url,listitem=liz)
-        return ok
-
+#handle albumArt and song info
+def fillListItemWithSongInfo(li,node):
+    try:
+        albumArt = cacheArt(node.findtext("art"))
+    except NameError:
+        albumArt = "DefaultFolder.png"
+    print "DEBUG: albumArt - " + albumArt
+    li.setLabel(unicode(node.findtext("title")))
+    li.setThumbnailImage(albumArt)
+#needed by play_track to play the song, added here to uniform api
+    li.setPath(node.findtext("url"))
+#keep setInfo separate, old version with infoLabels list cause strange bug on
+#kodi 15.2
+    li.setInfo( type="music", infoLabels={ 'Title' :
+        unicode(node.findtext("title")) })
+    li.setInfo( type="music", infoLabels={ 'Artist' :
+        unicode(node.findtext("artist")) } )
+    li.setInfo( type="music", infoLabels={ 'Album' :
+        unicode(node.findtext("album")) } )
+    li.setInfo( type="music", infoLabels={ 'Size' :
+        node.findtext("size") } )
+    li.setInfo( type="music", infoLabels={ 'Duration' :
+        node.findtext("time") } )
+    li.setInfo( type="music", infoLabels={ 'Year' :
+        node.findtext("year") } )
+    li.setInfo( type="music", infoLabels={ 'Tracknumber' :
+        node.findtext("track") } )
+    
 # Used to populate items for songs on XBMC. Calls plugin script with mode == 9 and object_id == (ampache song id)
 # TODO: Merge with addDir(). Same basic idea going on, this one adds links all at once, that one does it one at a time
 #       Also, some property things, some different context menu things.
 def addLinks(elem):
     xbmcplugin.setContent(int(sys.argv[1]), "songs")
     ok=True
-    li=[]
+    it=[]
     for node in elem:
-        cm = []
-        try:
-            albumArt = cacheArt(node.findtext("art"))
-        except NameError:
-            albumArt = "DefaultFolder.png"
-        print "DEBUG: albumArt - " + albumArt
-        liz=xbmcgui.ListItem(label=node.findtext("title").encode("utf-8"), thumbnailImage=albumArt)
-        liz.setInfo( "music", { "title": node.findtext("title").encode("utf-8"), "artist": node.findtext("artist"), "album": node.findtext("album"), "size": node.findtext("size"), "duration": node.findtext("time"),  "year": str(node.findtext("year")) } )
-        liz.setProperty("mimetype", 'audio/mpeg')
+        liz=xbmcgui.ListItem()
+        fillListItemWithSongInfo(liz, node)   
         liz.setProperty("IsPlayable", "true")
         song_elem = node.find("song")
         song_id = int(node.attrib["id"])
-        liz.addContextMenuItems(cm)
         track_parameters = { "mode": 9, "object_id": song_id}
         url = sys.argv[0] + '?' + urllib.urlencode(track_parameters)
         tu= (url,liz)
-        li.append(tu)
-    ok=xbmcplugin.addDirectoryItems(handle=int(sys.argv[1]),items=li,totalItems=len(elem))
+        it.append(tu)
+    ok=xbmcplugin.addDirectoryItems(handle=int(sys.argv[1]),items=it,totalItems=len(elem))
     return ok
 
 # The function that actually plays an Ampache URL by using setResolvedUrl. Gotta have the extra step in order to make
@@ -109,13 +124,9 @@ def play_track(id):
     elem = ampache_http_request("song",filter=id)
     for thisnode in elem:
         node = thisnode
-    try:
-        albumArt = cacheArt(node.findtext("art"))
-    except NameError:
-        albumArt = "DefaultFolder.png"
-    li = xbmcgui.ListItem(label=node.findtext("title").encode("utf-8"), thumbnailImage=albumArt, path=node.findtext("url"))
-    li.setInfo("music", { "artist" : node.findtext("artist") , "album" : node.findtext("album") , "title": node.findtext("title") , "duration": node.findtext("time"), "size": node.findtext("size") })
-    xbmcplugin.setResolvedUrl(handle=int(sys.argv[1]), succeeded=True, listitem=li)
+    liz = xbmcgui.ListItem()
+    fillListItemWithSongInfo(liz,node)
+    xbmcplugin.setResolvedUrl(handle=int(sys.argv[1]), succeeded=True,listitem=liz)
 
 # Main function for adding xbmc plugin elements
 def addDir(name,object_id,mode,iconimage,elem=None,artFilename=None):
@@ -257,9 +268,9 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
         image = "DefaultFolder.png"
     for node in elem:
         if object_type == 'albums':
-            fullname = node.findtext("name").encode("utf-8")
+            fullname = unicode(node.findtext("name"))
             fullname += " - "
-            fullname += node.findtext("year").encode("utf-8")
+            fullname += node.findtext("year")
 
             image = node.findtext("art")
             print "DEBUG: object_type - " + str(object_type)
@@ -273,7 +284,7 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
                 print "DEBUG: Art Filename: " + artFilename
                 addDir(fullname, node.attrib["id"],mode,image,node, artFilename = artFilename)
         else:
-            addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
+            addDir(unicode(node.findtext("name")),node.attrib["id"],mode,image,node)
 
 def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0,artist_bool=False,playlist=None):
     xbmcplugin.setContent(int(sys.argv[1]), 'songs')
@@ -321,11 +332,11 @@ def get_random_albums():
     for album_id in seq:
         elem = ampache_http_request('albums',offset=album_id,limit=1)
         for node in elem:
-            fullname = node.findtext("name").encode("utf-8")
+            fullname = unicode(node.findtext("name"))
             fullname += " - "
-            fullname += node.findtext("artist").encode("utf-8")
+            fullname += unicode(node.findtext("artist"))
             fullname += " - "
-            fullname += node.findtext("year").encode("utf-8")
+            fullname += node.findtext("year")
             addDir(fullname,node.attrib["id"],3,node.findtext("art"),node)        
   
 def get_random_artists():
@@ -340,7 +351,7 @@ def get_random_artists():
     for artist_id in seq:
         elem = ampache_http_request('artists',offset=artist_id,limit=1)
         for node in elem:
-            fullname = node.findtext("name").encode("utf-8")
+            fullname = unicode(node.findtext("name"))
             addDir(fullname,node.attrib["id"],2,image,node)        
 
 def get_random_songs():
@@ -387,6 +398,10 @@ if mode==None:
     addDir("Artists (" + str(elem.findtext("artists")) + ")",None,1,"DefaultFolder.png")
     addDir("Albums (" + str(elem.findtext("albums")) + ")",None,2,"DefaultFolder.png")
     addDir("Playlists (" + str(elem.findtext("playlists")) + ")",None,13,"DefaultFolder.png")
+
+#   artist list ( called from main screen  ( mode None ) , search
+#   screen ( mode 4 ) and recent ( mode 5 )  )
+
 elif mode==1:
     if object_id == 99999:
         thisFilter = getFilterFromUser()
@@ -417,6 +432,9 @@ elif mode==1:
         limit=elem.findtext("artists")
         get_items(object_type="artists", limit=limit)
        
+#   albums list ( called from main screen ( mode None ) , search
+#   screen ( mode 4 ) and recent ( mode 5 )  )
+
 elif mode==2:
         print ""
         if object_id == 99999:
@@ -449,6 +467,8 @@ elif mode==2:
             elem = AMPACHECONNECT()
             limit=elem.findtext("albums")
             get_items(object_type="albums", limit=limit)
+
+#   song mode ( called from search screen ( mode 4 ) and recent ( mode 5 )  )
         
 elif mode==3:
         print ""
@@ -479,15 +499,23 @@ elif mode==3:
         else:
             GETSONGS(objectid=object_id)
 
+
+# search screen ( called from main screen )
+
 elif mode==4:
     addDir("Search Artists...",99999,1,"DefaultFolder.png")
     addDir("Search Albums...",99999,2,"DefaultFolder.png")
     addDir("Search Songs...",99999,3,"DefaultFolder.png")
 
+# recent additions screen ( called from main screen )
+
 elif mode==5:
     addDir("Recent Artists...",99998,6,"DefaultFolder.png")
     addDir("Recent Albums...",99997,6,"DefaultFolder.png")
     addDir("Recent Songs...",99996,6,"DefaultFolder.png")
+
+#   screen with recent time possibilities ( subscreen of recent artists,
+#   recent albums, recent songs ) ( called from mode 5 )
 
 elif mode==6:
     addDir("Last Update",99998,99999-object_id,"DefaultFolder.png")
@@ -495,32 +523,44 @@ elif mode==6:
     addDir("1 Month",99996,99999-object_id,"DefaultFolder.png")
     addDir("3 Months",99995,99999-object_id,"DefaultFolder.png")
 
+#   generale random mode screen ( called from main screen )
+
 elif mode==7:
     addDir("Random Artists...",99999,8,"DefaultFolder.png")
     addDir("Random Albums...",99998,8,"DefaultFolder.png")
     addDir("Random Songs...",99997,8,"DefaultFolder.png")
 
+
+#   random mode screen ( display artists, albums or songs ) ( called from mode
+#   7  , get_links ( allsongs )  and this function )
+
 elif mode==8:
     print ""
+    #   artists
     if object_id == 99999:
         addDir("Refresh..",99999,8,os.path.join(imagepath, 'refresh_icon.png'))
         get_random_artists()
+    #   albums
     if object_id == 99998:
         addDir("Refresh..",99998,8,os.path.join(imagepath, 'refresh_icon.png'))
         get_random_albums()
+    #   songs
     if object_id == 99997:
         addDir("Refresh..",99997,8,os.path.join(imagepath, 'refresh_icon.png'))
         get_random_songs()
     else:
         GETSONGS(objectid=object_id, artist_bool=True )
 
+#   play track mode  ( mode set in add_links function )
+
 elif mode==9:
     play_track(object_id)
+
+#   playlist full list ( called from main screen )
 
 elif mode==13:
 #    print "Hello Ampache!!"
 #    get_items(object_type="playlists")
-        print "Hello Ampache!!!"
         if object_id == 99999:
             thisFilter = getFilterFromUser()
             if thisFilter:
@@ -549,6 +589,8 @@ elif mode==13:
             get_items(object_type="playlists",artist=object_id)
         else:
             get_items(object_type="playlists")
+
+#   playlist song mode
 
 elif mode==14:
 #    print "Hello Ampache!!"
@@ -583,8 +625,9 @@ elif mode==14:
         else:
             get_items(object_type="playlist_song")
 
+#   playlist song mode 2 ?
 elif mode==15:
-    print "Hello Ampache Playlist1!!!"
+    print "Hello Ampache Playlist!!!"
     GETSONGS(playlist=object_id)
 
 if mode < 19:
