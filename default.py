@@ -268,7 +268,8 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
         image = "DefaultFolder.png"
     for node in elem:
         if object_type == 'albums':
-            fullname = unicode(node.findtext("name"))
+            #no unicode function, cause urllib quot_plus error ( bug )
+            fullname = node.findtext("name").encode("utf-8")
             fullname += " - "
             fullname += node.findtext("year")
 
