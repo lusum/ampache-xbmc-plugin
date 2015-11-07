@@ -333,11 +333,12 @@ def get_random_albums():
     for album_id in seq:
         elem = ampache_http_request('albums',offset=album_id,limit=1)
         for node in elem:
-            fullname = unicode(node.findtext("name"))
+            #same urllib bug
+            fullname = node.findtext("name").encode("utf-8")
             fullname += " - "
-            fullname += unicode(node.findtext("artist"))
+            fullname += node.findtext("artist").encode("utf-8")
             fullname += " - "
-            fullname += node.findtext("year")
+            fullname += node.findtext("year").encode("utf-8")
             addDir(fullname,node.attrib["id"],3,node.findtext("art"),node)        
   
 def get_random_artists():
