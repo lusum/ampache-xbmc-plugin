@@ -271,7 +271,7 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
             #no unicode function, cause urllib quot_plus error ( bug )
             fullname = node.findtext("name").encode("utf-8")
             fullname += " - "
-            fullname += node.findtext("year")
+            fullname += node.findtext("year").encode("utf-8")
 
             image = node.findtext("art")
             print "DEBUG: object_type - " + str(object_type)
@@ -285,7 +285,7 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
                 print "DEBUG: Art Filename: " + artFilename
                 addDir(fullname, node.attrib["id"],mode,image,node, artFilename = artFilename)
         else:
-            addDir(unicode(node.findtext("name")),node.attrib["id"],mode,image,node)
+            addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
 
 def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0,artist_bool=False,playlist=None):
     xbmcplugin.setContent(int(sys.argv[1]), 'songs')
@@ -353,7 +353,7 @@ def get_random_artists():
     for artist_id in seq:
         elem = ampache_http_request('artists',offset=artist_id,limit=1)
         for node in elem:
-            fullname = unicode(node.findtext("name"))
+            fullname = node.findtext("name").encode("utf-8")
             addDir(fullname,node.attrib["id"],2,image,node)        
 
 def get_random_songs():
