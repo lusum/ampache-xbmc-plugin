@@ -224,7 +224,11 @@ def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
         response = urllib2.urlopen(req)
     contents = response.read()
     contents = contents.replace("\0", "")
-    tree=ET.fromstring(contents)
+    #code useful for debugging/parser needed
+    #xbmc.log("contents " + contents, xbmc.LOGNOTICE)
+    #parser = ET.XMLParser(encoding="utf-8")
+    #tree=ET.XML(contents, parser = parser)
+    tree=ET.XML(contents)
     response.close()
     if tree.findtext("error"):
         errornode = tree.find("error")
@@ -239,7 +243,7 @@ def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
             else:
                 response = urllib2.urlopen(req)
             contents = response.read()
-            tree=ET.fromstring(contents)
+            tree=ET.XML(contents)
             response.close()
     return tree
 
