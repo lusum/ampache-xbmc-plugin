@@ -37,13 +37,13 @@ def cacheArt(url):
         pathPng = os.path.join( cacheDir , imageNamePng )
         pathJpg = os.path.join( cacheDir , imageNameJpg )
 	if os.path.exists( pathPng ):
-		print "DEBUG: png cached"
+                xbmc.log("DEBUG: png cached",xbmc.LOGDEBUG)
 		return pathPng
         elif os.path.exists( pathJpg ):
-		print "DEBUG: jpg cached"
+                xbmc.log("DEBUG: jpg cached",xbmc.LOGDEBUG)
 		return pathJpg
 	else:
-		print "DEBUG: File needs fetching " 
+                xbmc.log("DEBUG: File needs fetching ",xbmc.LOGDEBUG)
                 ssl_certs_str = ampache.getSetting("disable_ssl_certs")
                 if str_to_bool(ssl_certs_str):
                     context = ssl._create_unverified_context()
@@ -59,10 +59,10 @@ def cacheArt(url):
 				fname = imageID.group(1) + '.' + tmpExt[1]
                         pathJpg = os.path.join( cacheDir , fname )
 			open( pathJpg, 'wb').write(opener.read())
-			print "DEBUG: Cached " + fname
+                        xbmc.log("DEBUG: Cached " + fname, xbmc.LOGDEBUG )
 			return fname
 		else:
-			print "DEBUG: It didnt work"
+                        xbmc.log("DEBUG: It didnt work", xbmc.LOGDEBUG )
                         raise NameError
 			#return False
 
@@ -72,7 +72,7 @@ def fillListItemWithSongInfo(li,node):
         albumArt = cacheArt(node.findtext("art"))
     except NameError:
         albumArt = "DefaultFolder.png"
-    print "DEBUG: albumArt - " + albumArt
+    xbmc.log("DEBUG: albumArt - " + albumArt, xbmc.LOGDEBUG )
     li.setLabel(unicode(node.findtext("title")))
     li.setThumbnailImage(albumArt)
 #needed by play_track to play the song, added here to uniform api
@@ -200,8 +200,10 @@ def AMPACHECONNECT():
     if str_to_bool(ssl_certs_str):
         gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
         response = urllib2.urlopen(req, context=gcontext)
+        xbmc.log("ssl",xbmc.LOGNOTICE)
     else:
         response = urllib2.urlopen(req)
+        xbmc.log("nossl",xbmc.LOGNOTICE)
     tree=ET.parse(response)
     response.close()
     elem = tree.getroot()
@@ -212,6 +214,7 @@ def AMPACHECONNECT():
 
 def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
     thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset)
+    xbmc.log("URL " + thisURL, xbmc.LOGNOTICE)
     req = urllib2.Request(thisURL)
     ssl_certs_str = ampache.getSetting("disable_ssl_certs")
     if str_to_bool(ssl_certs_str):
@@ -266,23 +269,29 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
     elif object_type == 'playlist_song':
         mode = 15
         image = "DefaultFolder.png"
+    names = set()
     for node in elem:
         if object_type == 'albums':
             #no unicode function, cause urllib quot_plus error ( bug )
             fullname = node.findtext("name").encode("utf-8")
             fullname += " - "
             fullname += node.findtext("year").encode("utf-8")
-
+            #remove duplicates in album names ( workaround for a problem in server comunication )
+            if fullname not in names:
+                names.add(fullname)
+            else:
+                continue
+            
             image = node.findtext("art")
-            print "DEBUG: object_type - " + str(object_type)
-            print "DEBUG: Art - " + str(image)
+            xbmc.log("DEBUG: object_type - " + str(object_type) , xbmc.LOGDEBUG )
+            xbmc.log("DEBUG: Art - " + str(image), xbmc.LOGDEBUG )
             try:
                 artFilename = cacheArt(image)        
             except NameError:
                 image = "DefaultFolder.png"
                 addDir(fullname,node.attrib["id"],mode,image,node)
             else:
-                print "DEBUG: Art Filename: " + artFilename
+                xbmc.log("DEBUG: Art Filename: " + artFilename, xbmc.LOGDEBUG )
                 addDir(fullname, node.attrib["id"],mode,image,node, artFilename = artFilename)
         else:
             addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
@@ -308,7 +317,7 @@ def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0,artist_bool=
 def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0):
     tokenexp = int(ampache.getSetting('token-exp'))
     if int(time.time()) > tokenexp:
-        print "refreshing token..."
+        xbmc.log("refreshing token...", xbmc.LOGNOTICE )
         elem = AMPACHECONNECT()
 
     token=ampache.getSetting('token')    
@@ -326,9 +335,9 @@ def get_random_albums():
     xbmcplugin.setContent(int(sys.argv[1]), 'albums')
     elem = AMPACHECONNECT()
     albums = int(elem.findtext('albums'))
-    print albums
+    xbmc.log("albums " + albums, xbmc.LOGDEBUG )
     random_albums = (int(ampache.getSetting("random_albums"))*3)+3
-    print random_albums
+    xbmc.log("random_albums " + random_albums, xbmc.LOGDEBUG )
     seq = random.sample(xrange(albums),random_albums)
     for album_id in seq:
         elem = ampache_http_request('albums',offset=album_id,limit=1)
@@ -345,9 +354,9 @@ def get_random_artists():
     xbmcplugin.setContent(int(sys.argv[1]), 'artists')
     elem = AMPACHECONNECT()
     artists = int(elem.findtext('artists'))
-    print artists
+    xbmc.log("artists " + artists, xbmc.LOGDEBUG )
     random_artists = (int(ampache.getSetting("random_artists"))*3)+3
-    print random_artists
+    xbmc.log("random_artists " + random_artists, xbmc.LOGDEBUG )
     seq = random.sample(xrange(artists),random_artists)
     image = "DefaultFolder.png"
     for artist_id in seq:
@@ -360,9 +369,9 @@ def get_random_songs():
     xbmcplugin.setContent(int(sys.argv[1]), 'songs')
     elem = AMPACHECONNECT()
     songs = int(elem.findtext('songs'))
-    print songs
+    xbmc.log("songs " + songs, xbmc.LOGDEBUG )
     random_songs = (int(ampache.getSetting("random_songs"))*3)+3
-    print random_songs
+    xbmc.log("random_songs " + random_songs, xbmc.LOGDEBUG )
     seq = random.sample(xrange(songs),random_songs)
     for song_id in seq:
         elem = ampache_http_request('songs',offset=song_id,limit=1)
