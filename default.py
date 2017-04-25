@@ -59,7 +59,7 @@ def cacheArt(url):
 				fname = imageID.group(1) + '.' + tmpExt[1]
                         pathJpg = os.path.join( cacheDir , fname )
 			open( pathJpg, 'wb').write(opener.read())
-                        xbmc.log("DEBUG: Cached " + fname, xbmc.LOGDEBUG )
+                        xbmc.log("DEBUG: Cached " + str(fname), xbmc.LOGDEBUG )
 			return fname
 		else:
                         xbmc.log("DEBUG: It didnt work", xbmc.LOGDEBUG )
@@ -72,7 +72,7 @@ def fillListItemWithSongInfo(li,node):
         albumArt = cacheArt(node.findtext("art"))
     except NameError:
         albumArt = "DefaultFolder.png"
-    xbmc.log("DEBUG: albumArt - " + albumArt, xbmc.LOGDEBUG )
+    xbmc.log("DEBUG: albumArt - " + str(albumArt), xbmc.LOGDEBUG )
     li.setLabel(unicode(node.findtext("title")))
     li.setThumbnailImage(albumArt)
 #needed by play_track to play the song, added here to uniform api
@@ -295,7 +295,7 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
                 image = "DefaultFolder.png"
                 addDir(fullname,node.attrib["id"],mode,image,node)
             else:
-                xbmc.log("DEBUG: Art Filename: " + artFilename, xbmc.LOGDEBUG )
+                xbmc.log("DEBUG: Art Filename: " + str(artFilename), xbmc.LOGDEBUG )
                 addDir(fullname, node.attrib["id"],mode,image,node, artFilename = artFilename)
         else:
             addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
@@ -339,9 +339,9 @@ def get_random_albums():
     xbmcplugin.setContent(int(sys.argv[1]), 'albums')
     elem = AMPACHECONNECT()
     albums = int(elem.findtext('albums'))
-    xbmc.log("albums " + albums, xbmc.LOGDEBUG )
+    xbmc.log("albums " + str(albums), xbmc.LOGDEBUG )
     random_albums = (int(ampache.getSetting("random_albums"))*3)+3
-    xbmc.log("random_albums " + random_albums, xbmc.LOGDEBUG )
+    xbmc.log("random_albums " + str(random_albums), xbmc.LOGDEBUG )
     seq = random.sample(xrange(albums),random_albums)
     for album_id in seq:
         elem = ampache_http_request('albums',offset=album_id,limit=1)
@@ -358,9 +358,9 @@ def get_random_artists():
     xbmcplugin.setContent(int(sys.argv[1]), 'artists')
     elem = AMPACHECONNECT()
     artists = int(elem.findtext('artists'))
-    xbmc.log("artists " + artists, xbmc.LOGDEBUG )
+    xbmc.log("artists " + str(artists), xbmc.LOGDEBUG )
     random_artists = (int(ampache.getSetting("random_artists"))*3)+3
-    xbmc.log("random_artists " + random_artists, xbmc.LOGDEBUG )
+    xbmc.log("random_artists " + str(random_artists), xbmc.LOGDEBUG )
     seq = random.sample(xrange(artists),random_artists)
     image = "DefaultFolder.png"
     for artist_id in seq:
@@ -373,9 +373,9 @@ def get_random_songs():
     xbmcplugin.setContent(int(sys.argv[1]), 'songs')
     elem = AMPACHECONNECT()
     songs = int(elem.findtext('songs'))
-    xbmc.log("songs " + songs, xbmc.LOGDEBUG )
+    xbmc.log("songs " + str(songs), xbmc.LOGDEBUG )
     random_songs = (int(ampache.getSetting("random_songs"))*3)+3
-    xbmc.log("random_songs " + random_songs, xbmc.LOGDEBUG )
+    xbmc.log("random_songs " + str(random_songs), xbmc.LOGDEBUG )
     seq = random.sample(xrange(songs),random_songs)
     for song_id in seq:
         elem = ampache_http_request('songs',offset=song_id,limit=1)
