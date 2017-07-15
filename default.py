@@ -250,21 +250,20 @@ def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
     return tree
 
     
-def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playlist=None, playlist_song=None):
+def get_items(object_type, object_id=None, add=None, filter=None,limit=5000):
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
     xbmc.log("DEBUG: object_type " + object_type, xbmc.LOGDEBUG)
     action = object_type
-    if artist:
-        filter = artist
-        action = 'artist_albums'
-        addDir("All Songs",artist,8, "DefaultFolder.png")
-    elif playlist:
-        action = 'playlist'
-        filter = playlist
-    elif playlist_song:
-        action = 'playlist_songs'
-        filter = playlist_song
+    
+    if object_type == 'albums' or object_type == 'playlists':
+        if object_id:
+            action = 'artist_albums'
+            addDir("All Songs",object_id,8, "DefaultFolder.png")
+    if object_id:
+        filter = object_id
+
     elem = ampache_http_request(action,add=add,filter=filter, limit=limit)
+
     if object_type == 'artists':
         mode = 2
         image = "DefaultFolder.png"
@@ -306,27 +305,9 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
     if object_type == 'playlists':
         for node in elem.iter('playlist'):
             addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
-    if object_type == 'playlist_songs':
+    if object_type == 'playlist_songs' or object_type == 'songs' or object_type == 'album_songs' or object_type == 'artist_songs':
         addSongLinks(elem)
 
-def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0,artist_bool=False,playlist=None):
-    xbmcplugin.setContent(int(sys.argv[1]), 'songs')
-    if filter:
-        action = 'songs'
-    elif playlist:
-        action = 'playlist_songs'
-        filter = playlist
-    elif objectid:
-        if artist_bool:
-            action = 'artist_songs'
-        else:
-            action = 'album_songs'
-        filter = objectid
-    else:
-        action = 'songs'
-    elem = ampache_http_request(action,add=add,filter=filter)
-    xbmc.log("DEBUG: elem " + str(elem), xbmc.LOGDEBUG )
-    addSongLinks(elem)
 
 def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0):
     tokenexp = int(ampache.getSetting('token-exp'))
@@ -345,9 +326,9 @@ def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0):
         thisURL += '&add=' + add
     return thisURL
 
-def get_time(offset):
+def get_time(time_offset):
     d = datetime.date.today()
-    dt = datetime.timedelta(days=offset)
+    dt = datetime.timedelta(days=time_offset)
     nd = d + dt
     return nd.isoformat()
 
@@ -396,6 +377,7 @@ def get_random(object_type):
         elif object_type == 'songs':
             addSongLinks(elem)
 
+
 params=get_params()
 name=None
 mode=None
@@ -403,23 +385,22 @@ object_id=None
 
 try:
         name=urllib.unquote_plus(params["name"])
+        xbmc.log("DEBUG: name " + name, xbmc.LOGDEBUG)
 except:
         pass
 try:
         mode=int(params["mode"])
+        xbmc.log("DEBUG: mode " + str(mode), xbmc.LOGDEBUG)
 except:
         pass
 try:
         object_id=int(params["object_id"])
+        xbmc.log("DEBUG: object_id " + str(object_id), xbmc.LOGDEBUG)
 except:
         pass
 
-print "Mode: "+str(mode)
-print "Name: "+str(name)
-print "ObjectID: "+str(object_id)
 
 if mode==None:
-    print ""
     elem = AMPACHECONNECT()
     addDir("Search...",0,4,"DefaultFolder.png")
     addDir("Recent...",0,5,"DefaultFolder.png")
@@ -456,7 +437,6 @@ elif mode==1:
 #   screen ( mode 4 ) and recent ( mode 5 )  )
 
 elif mode==2:
-        print ""
         if object_id == 99999:
             thisFilter = getFilterFromUser()
             if thisFilter:
@@ -473,7 +453,7 @@ elif mode==2:
         elif object_id == 99995:
             get_items(object_type="albums",add=get_time(-90))
         elif object_id:
-            get_items(object_type="albums",artist=object_id)
+            get_items(object_type="albums",object_id=object_id)
         else:
             elem = AMPACHECONNECT()
             limit=int(elem.findtext("albums"))
@@ -482,24 +462,23 @@ elif mode==2:
 #   song mode ( called from search screen ( mode 4 ) and recent ( mode 5 )  )
         
 elif mode==3:
-        print ""
         if object_id == 99999:
             thisFilter = getFilterFromUser()
             if thisFilter:
-                GETSONGS(filter=thisFilter)
+                get_items(object_type="songs",filter=thisFilter)
         elif object_id == 99998:
             elem = AMPACHECONNECT()
             update = elem.findtext("add")        
             xbmc.log(update[:10],xbmc.LOGNOTICE)
-            GETSONGS(add=update[:10])
+            get_items(object_type="songs",add=update[:10])
         elif object_id == 99997:
-            GETSONGS(add=get_time(-7))
+            get_items(object_type="songs",add=get_time(-7))
         elif object_id == 99996:
-            GETSONGS(add=get_time(-30))
+            get_items(object_type="songs",add=get_time(-30))
         elif object_id == 99995:
-            GETSONGS(add=get_time(-90))
+            get_items(object_type="songs",add=get_time(-90))
         else:
-            GETSONGS(objectid=object_id)
+            get_items(object_type="album_songs",object_id=object_id)
 
 
 # search screen ( called from main screen )
@@ -538,7 +517,6 @@ elif mode==7:
 #   7  , get_links ( allsongs )  and this function )
 
 elif mode==8:
-    print ""
     #   artists
     if object_id == 99999:
         addDir("Refresh..",99999,8,os.path.join(imagepath, 'refresh_icon.png'))
@@ -556,7 +534,7 @@ elif mode==8:
         addDir("Refresh..",99996,8,os.path.join(imagepath, 'refresh_icon.png'))
         get_random('playlists')
     else:
-        GETSONGS(objectid=object_id, artist_bool=True )
+        get_items(object_type="artist_songs",object_id=object_id )
 
 #   play track mode  ( mode set in add_links function )
 
@@ -583,7 +561,7 @@ elif mode==13:
         elif object_id == 99995:
             get_items(object_type="playlists",add=get_time(-90))
         elif object_id:
-            get_items(object_type="playlists",artist=object_id)
+            get_items(object_type="playlists",object_id=object_id)
         else:
             get_items(object_type="playlists")
 
@@ -608,14 +586,14 @@ elif mode==14:
         elif object_id == 99995:
             get_items(object_type="playlist_songs",add=get_time(-90))
         elif object_id:
-            get_items(object_type="playlist_songs",playlist_song=object_id)
+            get_items(object_type="playlist_songs",object_id=object_id)
         else:
             get_items(object_type="playlist_songs")
 
 #   playlist song mode 2 ?
 elif mode==15:
-    print "Hello Ampache Playlist!!!"
-    GETSONGS(playlist=object_id)
+    #"Hello Ampache Playlist!!!"
+    get_items(objecy_type="playlist_songs",object_id=object_id)
 
 if mode < 19:
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
