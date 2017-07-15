@@ -496,17 +496,26 @@ elif mode==5:
     addDir("Recent Artists...",99998,6,"DefaultFolder.png")
     addDir("Recent Albums...",99997,6,"DefaultFolder.png")
     addDir("Recent Songs...",99996,6,"DefaultFolder.png")
+    addDir("Recent Playlists...",99995,6,"DefaultFolder.png")
 
 #   screen with recent time possibilities ( subscreen of recent artists,
 #   recent albums, recent songs ) ( called from mode 5 )
 
 elif mode==6:
-    addDir("Last Update",99998,99999-object_id,"DefaultFolder.png")
-    addDir("1 Week",99997,99999-object_id,"DefaultFolder.png")
-    addDir("1 Month",99996,99999-object_id,"DefaultFolder.png")
-    addDir("3 Months",99995,99999-object_id,"DefaultFolder.png")
+    #not clean, but i don't want to change too much the old code
+    if object_id > 99995:
+        addDir("Last Update",99998,99999-object_id,"DefaultFolder.png")
+        addDir("1 Week",99997,99999-object_id,"DefaultFolder.png")
+        addDir("1 Month",99996,99999-object_id,"DefaultFolder.png")
+        addDir("3 Months",99995,99999-object_id,"DefaultFolder.png")
+    #object_id for playlists is 99995 so 99999-object_id is 4 that is search function
+    else:
+        addDir("Last Update",99998,13,"DefaultFolder.png")
+        addDir("1 Week",99997,13,"DefaultFolder.png")
+        addDir("1 Month",99996,13,"DefaultFolder.png")
+        addDir("3 Months",99995,13,"DefaultFolder.png")
 
-#   generale random mode screen ( called from main screen )
+# general random mode screen ( called from main screen )
 
 elif mode==7:
     addDir("Random Artists...",99999,8,"DefaultFolder.png")
