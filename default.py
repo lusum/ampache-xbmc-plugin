@@ -97,7 +97,7 @@ def fillListItemWithSongInfo(li,node):
 # Used to populate items for songs on XBMC. Calls plugin script with mode == 9 and object_id == (ampache song id)
 # TODO: Merge with addDir(). Same basic idea going on, this one adds links all at once, that one does it one at a time
 #       Also, some property things, some different context menu things.
-def addLinks(elem):
+def addSongLinks(elem):
     xbmcplugin.setContent(int(sys.argv[1]), "songs")
     ok=True
     it=[]
@@ -307,7 +307,7 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
         for node in elem.iter('playlist'):
             addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
     if object_type == 'playlist_songs':
-        addLinks(elem)
+        addSongLinks(elem)
 
 def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0,artist_bool=False,playlist=None):
     xbmcplugin.setContent(int(sys.argv[1]), 'songs')
@@ -326,7 +326,7 @@ def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0,artist_bool=
         action = 'songs'
     elem = ampache_http_request(action,add=add,filter=filter)
     xbmc.log("DEBUG: elem " + str(elem), xbmc.LOGDEBUG )
-    addLinks(elem)
+    addSongLinks(elem)
 
 def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0):
     tokenexp = int(ampache.getSetting('token-exp'))
@@ -345,52 +345,49 @@ def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0):
         thisURL += '&add=' + add
     return thisURL
 
-def get_random_albums():
-    xbmcplugin.setContent(int(sys.argv[1]), 'albums')
-    elem = AMPACHECONNECT()
-    albums = int(elem.findtext('albums'))
-    xbmc.log("DEBUG: albums " + str(albums), xbmc.LOGDEBUG )
-    random_albums = (int(ampache.getSetting("random_albums"))*3)+3
-    xbmc.log("DEBUG: random_albums " + str(random_albums), xbmc.LOGDEBUG )
-    seq = random.sample(xrange(albums),random_albums)
-    for album_id in seq:
-        elem = ampache_http_request('albums',offset=album_id,limit=1)
-        for node in elem.iter("album"):
-            #same urllib bug
-            fullname = node.findtext("name").encode("utf-8")
-            fullname += " - "
-            fullname += node.findtext("artist").encode("utf-8")
-            fullname += " - "
-            fullname += node.findtext("year").encode("utf-8")
-            addDir(fullname,node.attrib["id"],3,node.findtext("art"),node)        
-  
-def get_random_artists():
-    xbmcplugin.setContent(int(sys.argv[1]), 'artists')
-    elem = AMPACHECONNECT()
-    artists = int(elem.findtext('artists'))
-    xbmc.log("DEBUG: artists " + str(artists), xbmc.LOGDEBUG )
-    random_artists = (int(ampache.getSetting("random_artists"))*3)+3
-    xbmc.log("DEBUG: random_artists " + str(random_artists), xbmc.LOGDEBUG )
-    seq = random.sample(xrange(artists),random_artists)
-    image = "DefaultFolder.png"
-    for artist_id in seq:
-        elem = ampache_http_request('artists',offset=artist_id,limit=1)
-        for node in elem.iter("artist"):
-            fullname = node.findtext("name").encode("utf-8")
-            addDir(fullname,node.attrib["id"],2,image,node)        
+def get_random(object_type):
+    xbmc.log("DEBUG: object_type " + object_type, xbmc.LOGDEBUG)
+    #object type can be : albums, artists, songs, playlists
+    
+    if object_type == 'albums':
+        settings = "random_albums"
+    elif object_type == 'artists':
+        settings = "random_artists"
+    elif object_type == 'playlists':
+        settings = "random_playlists"
+    elif object_type == 'songs':
+        settings = "random_songs"
 
-def get_random_songs():
-    xbmcplugin.setContent(int(sys.argv[1]), 'songs')
+    xbmcplugin.setContent(int(sys.argv[1]), object_type)
     elem = AMPACHECONNECT()
-    songs = int(elem.findtext('songs'))
-    xbmc.log("DEBUG: songs " + str(songs), xbmc.LOGDEBUG )
-    random_songs = (int(ampache.getSetting("random_songs"))*3)+3
-    xbmc.log("DEBUG: random_songs " + str(random_songs), xbmc.LOGDEBUG )
-    seq = random.sample(xrange(songs),random_songs)
-    for song_id in seq:
-        elem = ampache_http_request('songs',offset=song_id,limit=1)
-        addLinks(elem)
-
+    items = int(elem.findtext(object_type))
+    xbmc.log("DEBUG: items " + str(items), xbmc.LOGDEBUG )
+    random_items = (int(ampache.getSetting(settings))*3)+3
+    xbmc.log("DEBUG: random_items " + str(random_items), xbmc.LOGDEBUG )
+    seq = random.sample(xrange(items),random_items)
+    for item_id in seq:
+        elem = ampache_http_request(object_type,offset=item_id,limit=1)
+        if object_type == 'albums':
+            for node in elem.iter("album"):
+                #same urllib bug
+                fullname = node.findtext("name").encode("utf-8")
+                fullname += " - "
+                fullname += node.findtext("artist").encode("utf-8")
+                fullname += " - "
+                fullname += node.findtext("year").encode("utf-8")
+                addDir(fullname,node.attrib["id"],3,node.findtext("art"),node)        
+        elif object_type == 'artists':
+            image = "DefaultFolder.png"
+            for node in elem.iter("artist"):
+                fullname = node.findtext("name").encode("utf-8")
+                addDir(fullname,node.attrib["id"],2,image,node)        
+        elif object_type == 'playlists':
+            image = "DefaultFolder.png"
+            for node in elem.iter("playlist"):
+                fullname = node.findtext("name").encode("utf-8")
+                addDir(fullname,node.attrib["id"],14,image,node)        
+        elif object_type == 'songs':
+            addSongLinks(elem)
 
 params=get_params()
 name=None
@@ -554,6 +551,7 @@ elif mode==7:
     addDir("Random Artists...",99999,8,"DefaultFolder.png")
     addDir("Random Albums...",99998,8,"DefaultFolder.png")
     addDir("Random Songs...",99997,8,"DefaultFolder.png")
+    addDir("Random Playlists...",99996,8,"DefaultFolder.png")
 
 
 #   random mode screen ( display artists, albums or songs ) ( called from mode
@@ -564,15 +562,19 @@ elif mode==8:
     #   artists
     if object_id == 99999:
         addDir("Refresh..",99999,8,os.path.join(imagepath, 'refresh_icon.png'))
-        get_random_artists()
+        get_random('artists')
     #   albums
     if object_id == 99998:
         addDir("Refresh..",99998,8,os.path.join(imagepath, 'refresh_icon.png'))
-        get_random_albums()
+        get_random('albums')
     #   songs
     if object_id == 99997:
         addDir("Refresh..",99997,8,os.path.join(imagepath, 'refresh_icon.png'))
-        get_random_songs()
+        get_random('songs')
+    # playlists
+    if object_id == 99996:
+        addDir("Refresh..",99996,8,os.path.join(imagepath, 'refresh_icon.png'))
+        get_random('playlists')
     else:
         GETSONGS(objectid=object_id, artist_bool=True )
 

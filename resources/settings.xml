@@ -5,7 +5,8 @@
    <setting id="random_artists" type="enum" label="30003" values="3|6|9|12|15" default="1"/>
    <setting id="random_albums" type="enum" label="30004" values="3|6|9|12|15" default="1"/>
    <setting id="random_songs" type="enum" label="30005" values="3|6|9|12|15" default="1"/>
-   <setting id="token" type="text" label="30006" />
-	 <setting id="token-exp" type="text" label="30007" />
-	 <setting id="disable_ssl_certs" type="bool" label="30008" default="false"/>
+   <setting id="random_playlists" type="enum" label="30006" values="3|6|9|12|15" default="1"/>
+   <setting id="token" type="text" label="30007" />
+	 <setting id="token-exp" type="text" label="30008" />
+	 <setting id="disable_ssl_certs" type="bool" label="30009" default="false"/>
 </settings>
