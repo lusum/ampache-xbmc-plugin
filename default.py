@@ -101,7 +101,7 @@ def addLinks(elem):
     xbmcplugin.setContent(int(sys.argv[1]), "songs")
     ok=True
     it=[]
-    for node in elem:
+    for node in elem.iter("song"):
         liz=xbmcgui.ListItem()
         fillListItemWithSongInfo(liz, node)   
         liz.setProperty("IsPlayable", "true")
@@ -200,10 +200,10 @@ def AMPACHECONNECT():
     if str_to_bool(ssl_certs_str):
         gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
         response = urllib2.urlopen(req, context=gcontext)
-        xbmc.log("ssl",xbmc.LOGNOTICE)
+        xbmc.log("DEBUG: ssl",xbmc.LOGDEBUG)
     else:
         response = urllib2.urlopen(req)
-        xbmc.log("nossl",xbmc.LOGNOTICE)
+        xbmc.log("DEBUG: nossl",xbmc.LOGDEBUG)
     tree=ET.parse(response)
     response.close()
     elem = tree.getroot()
@@ -224,9 +224,11 @@ def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
         response = urllib2.urlopen(req)
     contents = response.read()
     contents = contents.replace("\0", "")
+    #remove bug & it is not allowed as text in tags
+    
     #code useful for debugging/parser needed
-    #xbmc.log("contents " + contents, xbmc.LOGNOTICE)
-    #parser = ET.XMLParser(encoding="utf-8")
+    xbmc.log("DEBUG: contents " + contents, xbmc.LOGDEBUG)
+    #parser = ET.XMLParser(recover=True)
     #tree=ET.XML(contents, parser = parser)
     tree=ET.XML(contents)
     response.close()
@@ -274,8 +276,8 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
         mode = 15
         image = "DefaultFolder.png"
     names = set()
-    for node in elem:
-        if object_type == 'albums':
+    if object_type == 'albums':
+        for node in elem.iter('album'):
             #no unicode function, cause urllib quot_plus error ( bug )
             fullname = node.findtext("name").encode("utf-8")
             fullname += " - "
@@ -297,7 +299,11 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
             else:
                 xbmc.log("DEBUG: Art Filename: " + str(artFilename), xbmc.LOGDEBUG )
                 addDir(fullname, node.attrib["id"],mode,image,node, artFilename = artFilename)
-        else:
+    if object_type == 'artists':
+        for node in elem.iter('artist'):
+            addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
+    if object_type == 'playlists':
+        for node in elem.iter('playlist'):
             addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
 
 def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0,artist_bool=False,playlist=None):
@@ -316,6 +322,7 @@ def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0,artist_bool=
     else:
         action = 'songs'
     elem = ampache_http_request(action,add=add,filter=filter)
+    xbmc.log("DEBUG: elem " + str(elem), xbmc.LOGDEBUG )
     addLinks(elem)
 
 def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0):
@@ -339,13 +346,13 @@ def get_random_albums():
     xbmcplugin.setContent(int(sys.argv[1]), 'albums')
     elem = AMPACHECONNECT()
     albums = int(elem.findtext('albums'))
-    xbmc.log("albums " + str(albums), xbmc.LOGDEBUG )
+    xbmc.log("DEBUG: albums " + str(albums), xbmc.LOGDEBUG )
     random_albums = (int(ampache.getSetting("random_albums"))*3)+3
-    xbmc.log("random_albums " + str(random_albums), xbmc.LOGDEBUG )
+    xbmc.log("DEBUG: random_albums " + str(random_albums), xbmc.LOGDEBUG )
     seq = random.sample(xrange(albums),random_albums)
     for album_id in seq:
         elem = ampache_http_request('albums',offset=album_id,limit=1)
-        for node in elem:
+        for node in elem.iter("album"):
             #same urllib bug
             fullname = node.findtext("name").encode("utf-8")
             fullname += " - "
@@ -358,14 +365,14 @@ def get_random_artists():
     xbmcplugin.setContent(int(sys.argv[1]), 'artists')
     elem = AMPACHECONNECT()
     artists = int(elem.findtext('artists'))
-    xbmc.log("artists " + str(artists), xbmc.LOGDEBUG )
+    xbmc.log("DEBUG: artists " + str(artists), xbmc.LOGDEBUG )
     random_artists = (int(ampache.getSetting("random_artists"))*3)+3
-    xbmc.log("random_artists " + str(random_artists), xbmc.LOGDEBUG )
+    xbmc.log("DEBUG: random_artists " + str(random_artists), xbmc.LOGDEBUG )
     seq = random.sample(xrange(artists),random_artists)
     image = "DefaultFolder.png"
     for artist_id in seq:
         elem = ampache_http_request('artists',offset=artist_id,limit=1)
-        for node in elem:
+        for node in elem.iter("artist"):
             fullname = node.findtext("name").encode("utf-8")
             addDir(fullname,node.attrib["id"],2,image,node)        
 
@@ -373,9 +380,9 @@ def get_random_songs():
     xbmcplugin.setContent(int(sys.argv[1]), 'songs')
     elem = AMPACHECONNECT()
     songs = int(elem.findtext('songs'))
-    xbmc.log("songs " + str(songs), xbmc.LOGDEBUG )
+    xbmc.log("DEBUG: songs " + str(songs), xbmc.LOGDEBUG )
     random_songs = (int(ampache.getSetting("random_songs"))*3)+3
-    xbmc.log("random_songs " + str(random_songs), xbmc.LOGDEBUG )
+    xbmc.log("DEBUG: random_songs " + str(random_songs), xbmc.LOGDEBUG )
     seq = random.sample(xrange(songs),random_songs)
     for song_id in seq:
         elem = ampache_http_request('songs',offset=song_id,limit=1)
