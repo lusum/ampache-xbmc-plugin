@@ -134,7 +134,7 @@ def addDir(name,object_id,mode,iconimage,elem=None,artFilename=None):
         liz=xbmcgui.ListItem(name, iconImage=artFilename, thumbnailImage=artFilename)
     else:
         liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
-
+    
     liz.setInfo( type="Music", infoLabels={ "Title": name } )
     try:
         artist_elem = elem.find("artist")
@@ -144,6 +144,7 @@ def addDir(name,object_id,mode,iconimage,elem=None,artFilename=None):
         liz.addContextMenuItems(cm)
     except:
         pass
+
     u=sys.argv[0]+"?object_id="+str(object_id)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name)
     ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=True)
     return ok
@@ -203,8 +204,8 @@ def get_auth_key_login_url():
 def AMPACHECONNECT():
     socket.setdefaulttimeout(3600)
     nTime = int(time.time())
-    api_key = ampache.getSetting("use_api_key")
-    if str_to_bool(api_key):
+    use_api_key = ampache.getSetting("use_api_key")
+    if str_to_bool(use_api_key):
         myURL = get_auth_key_login_url() 
     else: 
         myURL = get_user_pwd_login_url(nTime)
@@ -269,7 +270,7 @@ def get_items(object_type, object_id=None, add=None, filter=None,limit=5000):
     xbmc.log("DEBUG: object_type " + object_type, xbmc.LOGDEBUG)
     action = object_type
     
-    if object_type == 'albums' or object_type == 'playlists':
+    if object_type == 'albums':
         if object_id:
             action = 'artist_albums'
             addDir("All Songs",object_id,12, "DefaultFolder.png")
@@ -286,8 +287,8 @@ def get_items(object_type, object_id=None, add=None, filter=None,limit=5000):
     elif object_type == 'playlists':
         mode = 14
         image = "DefaultFolder.png"
-    names = set()
     if object_type == 'albums':
+        names = set()
         for node in elem.iter('album'):
             #no unicode function, cause urllib quot_plus error ( bug )
             fullname = node.findtext("name").encode("utf-8")
