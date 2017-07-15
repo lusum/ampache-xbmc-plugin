@@ -345,6 +345,13 @@ def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0):
         thisURL += '&add=' + add
     return thisURL
 
+def get_time(offset):
+    d = datetime.date.today()
+    dt = datetime.timedelta(days=offset)
+    nd = d + dt
+    return nd.isoformat()
+
+
 def get_random(object_type):
     xbmc.log("DEBUG: object_type " + object_type, xbmc.LOGDEBUG)
     #object type can be : albums, artists, songs, playlists
@@ -435,20 +442,11 @@ elif mode==1:
         xbmc.log(update[:10],xbmc.LOGNOTICE)
         get_items(object_type="artists",add=update[:10])
     elif object_id == 99997:
-        d = datetime.date.today()
-        dt = datetime.timedelta(days=-7)
-        nd = d + dt
-        get_items(object_type="artists",add=nd.isoformat())
+        get_items(object_type="artists",add=get_time(-7))
     elif object_id == 99996:
-        d = datetime.date.today()
-        dt = datetime.timedelta(days=-30)
-        nd = d + dt
-        get_items(object_type="artists",add=nd.isoformat())
+        get_items(object_type="artists",add=get_time(-30))
     elif object_id == 99995:
-        d = datetime.date.today()
-        dt = datetime.timedelta(days=-90)
-        nd = d + dt
-        get_items(object_type="artists",add=nd.isoformat())
+        get_items(object_type="artists",add=get_time(-90))
     else:
         elem = AMPACHECONNECT()
         limit=int(elem.findtext("artists"))
@@ -469,20 +467,11 @@ elif mode==2:
             xbmc.log(update[:10],xbmc.LOGNOTICE)
             get_items(object_type="albums",add=update[:10])
         elif object_id == 99997:
-            d = datetime.date.today()
-            dt = datetime.timedelta(days=-7)
-            nd = d + dt
-            get_items(object_type="albums",add=nd.isoformat())
+            get_items(object_type="albums",add=get_time(-7))
         elif object_id == 99996:
-            d = datetime.date.today()
-            dt = datetime.timedelta(days=-30)
-            nd = d + dt
-            get_items(object_type="albums",add=nd.isoformat())
+            get_items(object_type="albums",add=get_time(-30))
         elif object_id == 99995:
-            d = datetime.date.today()
-            dt = datetime.timedelta(days=-90)
-            nd = d + dt
-            get_items(object_type="albums",add=nd.isoformat())
+            get_items(object_type="albums",add=get_time(-90))
         elif object_id:
             get_items(object_type="albums",artist=object_id)
         else:
@@ -504,20 +493,11 @@ elif mode==3:
             xbmc.log(update[:10],xbmc.LOGNOTICE)
             GETSONGS(add=update[:10])
         elif object_id == 99997:
-            d = datetime.date.today()
-            dt = datetime.timedelta(days=-7)
-            nd = d + dt
-            GETSONGS(add=nd.isoformat())
+            GETSONGS(add=get_time(-7))
         elif object_id == 99996:
-            d = datetime.date.today()
-            dt = datetime.timedelta(days=-30)
-            nd = d + dt
-            GETSONGS(add=nd.isoformat())
+            GETSONGS(add=get_time(-30))
         elif object_id == 99995:
-            d = datetime.date.today()
-            dt = datetime.timedelta(days=-90)
-            nd = d + dt
-            GETSONGS(add=nd.isoformat())
+            GETSONGS(add=get_time(-90))
         else:
             GETSONGS(objectid=object_id)
 
@@ -597,20 +577,11 @@ elif mode==13:
             xbmc.log(update[:10],xbmc.LOGNOTICE)
             get_items(object_type="playlists",add=update[:10])
         elif object_id == 99997:
-            d = datetime.date.today()
-            dt = datetime.timedelta(days=-7)
-            nd = d + dt
-            get_items(object_type="playlists",add=nd.isoformat())
+            get_items(object_type="playlists",add=get_time(-7))
         elif object_id == 99996:
-            d = datetime.date.today()
-            dt = datetime.timedelta(days=-30)
-            nd = d + dt
-            get_items(object_type="playlists",add=nd.isoformat())
+            get_items(object_type="playlists",add=get_time(-30))
         elif object_id == 99995:
-            d = datetime.date.today()
-            dt = datetime.timedelta(days=-90)
-            nd = d + dt
-            get_items(object_type="playlists",add=nd.isoformat())
+            get_items(object_type="playlists",add=get_time(-90))
         elif object_id:
             get_items(object_type="playlists",artist=object_id)
         else:
@@ -631,20 +602,11 @@ elif mode==14:
             xbmc.log(update[:10],xbmc.LOGNOTICE)
             get_items(object_type="playlist_songs",add=update[:10])
         elif object_id == 99997:
-            d = datetime.date.today()
-            dt = datetime.timedelta(days=-7)
-            nd = d + dt
-            get_items(object_type="playlist_songs",add=nd.isoformat())
+            get_items(object_type="playlist_songs",add=get_time(-7))
         elif object_id == 99996:
-            d = datetime.date.today()
-            dt = datetime.timedelta(days=-30)
-            nd = d + dt
-            get_items(object_type="playlist_songs",add=nd.isoformat())
+            get_items(object_type="playlist_songs",add=get_time(-30))
         elif object_id == 99995:
-            d = datetime.date.today()
-            dt = datetime.timedelta(days=-90)
-            nd = d + dt
-            get_items(object_type="playlist_songs",add=nd.isoformat())
+            get_items(object_type="playlist_songs",add=get_time(-90))
         elif object_id:
             get_items(object_type="playlist_songs",playlist_song=object_id)
         else:
