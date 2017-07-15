@@ -252,6 +252,7 @@ def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
     
 def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playlist=None, playlist_song=None):
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
+    xbmc.log("DEBUG: object_type " + object_type, xbmc.LOGDEBUG)
     action = object_type
     if artist:
         filter = artist
@@ -261,7 +262,7 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
         action = 'playlist'
         filter = playlist
     elif playlist_song:
-        action = 'playlist_song'
+        action = 'playlist_songs'
         filter = playlist_song
     elem = ampache_http_request(action,add=add,filter=filter, limit=limit)
     if object_type == 'artists':
@@ -272,7 +273,7 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
     elif object_type == 'playlists':
         mode = 14
         image = "DefaultFolder.png"
-    elif object_type == 'playlist_song':
+    elif object_type == 'playlist_songs':
         mode = 15
         image = "DefaultFolder.png"
     names = set()
@@ -305,6 +306,8 @@ def get_items(object_type, artist=None, add=None, filter=None, limit=5000, playl
     if object_type == 'playlists':
         for node in elem.iter('playlist'):
             addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
+    if object_type == 'playlist_songs':
+        addLinks(elem)
 
 def GETSONGS(objectid=None,filter=None,add=None,limit=5000,offset=0,artist_bool=False,playlist=None):
     xbmcplugin.setContent(int(sys.argv[1]), 'songs')
@@ -451,7 +454,7 @@ elif mode==1:
         get_items(object_type="artists",add=nd.isoformat())
     else:
         elem = AMPACHECONNECT()
-        limit=elem.findtext("artists")
+        limit=int(elem.findtext("artists"))
         get_items(object_type="artists", limit=limit)
        
 #   albums list ( called from main screen ( mode None ) , search
@@ -487,7 +490,7 @@ elif mode==2:
             get_items(object_type="albums",artist=object_id)
         else:
             elem = AMPACHECONNECT()
-            limit=elem.findtext("albums")
+            limit=int(elem.findtext("albums"))
             get_items(object_type="albums", limit=limit)
 
 #   song mode ( called from search screen ( mode 4 ) and recent ( mode 5 )  )
@@ -581,7 +584,6 @@ elif mode==9:
 #   playlist full list ( called from main screen )
 
 elif mode==13:
-#    print "Hello Ampache!!"
 #    get_items(object_type="playlists")
         if object_id == 99999:
             thisFilter = getFilterFromUser()
@@ -615,37 +617,36 @@ elif mode==13:
 #   playlist song mode
 
 elif mode==14:
-#    print "Hello Ampache!!"
 #    get_items(object_type="playlists")
-        print "Hello Ampache Playlists!!!"
+#        "Ampache Playlists"
         if object_id == 99999:
             thisFilter = getFilterFromUser()
             if thisFilter:
-                get_items(object_type="playlist_song",filter=thisFilter)
+                get_items(object_type="playlist_songs",filter=thisFilter)
         elif object_id == 99998:
             elem = AMPACHECONNECT()
             update = elem.findtext("add")        
             xbmc.log(update[:10],xbmc.LOGNOTICE)
-            get_items(object_type="playlist_song",add=update[:10])
+            get_items(object_type="playlist_songs",add=update[:10])
         elif object_id == 99997:
             d = datetime.date.today()
             dt = datetime.timedelta(days=-7)
             nd = d + dt
-            get_items(object_type="playlist_song",add=nd.isoformat())
+            get_items(object_type="playlist_songs",add=nd.isoformat())
         elif object_id == 99996:
             d = datetime.date.today()
             dt = datetime.timedelta(days=-30)
             nd = d + dt
-            get_items(object_type="playlist_song",add=nd.isoformat())
+            get_items(object_type="playlist_songs",add=nd.isoformat())
         elif object_id == 99995:
             d = datetime.date.today()
             dt = datetime.timedelta(days=-90)
             nd = d + dt
-            get_items(object_type="playlist_song",add=nd.isoformat())
+            get_items(object_type="playlist_songs",add=nd.isoformat())
         elif object_id:
-            get_items(object_type="playlist_song",playlist=object_id)
+            get_items(object_type="playlist_songs",playlist_song=object_id)
         else:
-            get_items(object_type="playlist_song")
+            get_items(object_type="playlist_songs")
 
 #   playlist song mode 2 ?
 elif mode==15:
