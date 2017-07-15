@@ -180,9 +180,7 @@ def getFilterFromUser():
             return(False)
     return(filter)
 
-def AMPACHECONNECT():
-    socket.setdefaulttimeout(3600)
-    nTime = int(time.time())
+def get_user_pwd_login_url(nTime):
     myTimeStamp = str(nTime)
     sdf = ampache.getSetting("password")
     hasher = hashlib.new('sha256')
@@ -194,6 +192,22 @@ def AMPACHECONNECT():
     myURL = ampache.getSetting("server") + '/server/xml.server.php?action=handshake&auth='
     myURL += myPassphrase + "&timestamp=" + myTimeStamp
     myURL += '&version=350001&user=' + ampache.getSetting("username")
+    return myURL
+
+def get_auth_key_login_url():
+    myURL = ampache.getSetting("server") + '/server/xml.server.php?action=handshake&auth='
+    myURL += ampache.getSetting("api_key")
+    myURL += '&version=350001'
+    return myURL
+
+def AMPACHECONNECT():
+    socket.setdefaulttimeout(3600)
+    nTime = int(time.time())
+    api_key = ampache.getSetting("use_api_key")
+    if str_to_bool(api_key):
+        myURL = get_auth_key_login_url() 
+    else: 
+        myURL = get_user_pwd_login_url(nTime)
     xbmc.log(myURL,xbmc.LOGNOTICE)
     req = urllib2.Request(myURL)
     ssl_certs_str = ampache.getSetting("disable_ssl_certs")

@@ -2,11 +2,13 @@
     <string id="30000">Ampache server url</string>
     <string id="30001">Username</string>
     <string id="30002">Password</string>
-    <string id="30003">Number of random artists</string>
-    <string id="30004">Number of random albums</string>
-    <string id="30005">Number of random songs</string>
-    <string id="30006">Number of random playlists</string>
-    <string id="30007">Token</string>
-    <string id="30008">Token expiration</string>
-    <string id="30009">Disable SSL certificate verification ( DANGEROUS )</string>
+    <string id="30003">Use api key instead of username/password</string>
+    <string id="30004">Api key</string>
+    <string id="30005">Number of random artists</string>
+    <string id="30006">Number of random albums</string>
+    <string id="30007">Number of random songs</string>
+    <string id="30008">Number of random playlists</string>
+    <string id="30009">Token</string>
+    <string id="30010">Token expiration</string>
+    <string id="30011">Disable SSL certificate verification ( DANGEROUS )</string>
 </strings>
