@@ -12,7 +12,7 @@
 	<extension point="xbmc.service" library="service.py" start="login" />
   <extension point="xbmc.addon.metadata">
     <summary>Stream music from Ampache XML-API</summary>
-    <description>ampacheee</description>
+    <description>ampache</description>
     <platform>all</platform>
   </extension>
 </addon>

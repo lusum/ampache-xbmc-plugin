@@ -18,7 +18,7 @@ mediaDir = os.path.join( BASE_RESOURCE_PATH , 'media' )
 cacheDir = os.path.join( mediaDir , 'cache' )
 imagepath = os.path.join( mediaDir ,'images')
 
-#   sting to bool function : from string 'true' or 'false' to boolean True or
+#   string to bool function : from string 'true' or 'false' to boolean True or
 #   False, raise ValueError
 def str_to_bool(s):
     if s == 'true':
