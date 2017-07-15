@@ -410,10 +410,13 @@ if mode==None:
 #   screen ( mode 4 ) and recent ( mode 5 )  )
 
 elif mode==1:
+    #artist, album, songs, playlist follow the same structure
+    #search function
     if object_id == 99999:
         thisFilter = getFilterFromUser()
         if thisFilter:
             get_items(object_type="artists",filter=thisFilter)
+    #four if for recent ( to rework in one function )
     elif object_id == 99998:
         elem = AMPACHECONNECT()
         update = elem.findtext("add")        
@@ -425,6 +428,7 @@ elif mode==1:
         get_items(object_type="artists",add=get_time(-30))
     elif object_id == 99995:
         get_items(object_type="artists",add=get_time(-90))
+    #all artists list
     else:
         elem = AMPACHECONNECT()
         limit=int(elem.findtext("artists"))
@@ -484,6 +488,7 @@ elif mode==4:
     addDir("Search Artists...",99999,1,"DefaultFolder.png")
     addDir("Search Albums...",99999,2,"DefaultFolder.png")
     addDir("Search Songs...",99999,3,"DefaultFolder.png")
+    addDir("Search Playlists...",99999,13,"DefaultFolder.png")
 
 # recent additions screen ( called from main screen )
 
@@ -541,7 +546,6 @@ elif mode==9:
 #   playlist full list ( called from main screen )
 
 elif mode==13:
-#    get_items(object_type="playlists")
         if object_id == 99999:
             thisFilter = getFilterFromUser()
             if thisFilter:
@@ -565,27 +569,28 @@ elif mode==13:
 #   playlist song mode
 
 elif mode==14:
-#    get_items(object_type="playlists")
+    get_items(object_type="playlist_songs",object_id=object_id)
 #        "Ampache Playlists"
-        if object_id == 99999:
-            thisFilter = getFilterFromUser()
-            if thisFilter:
-                get_items(object_type="playlist_songs",filter=thisFilter)
-        elif object_id == 99998:
-            elem = AMPACHECONNECT()
-            update = elem.findtext("add")        
-            xbmc.log(update[:10],xbmc.LOGNOTICE)
-            get_items(object_type="playlist_songs",add=update[:10])
-        elif object_id == 99997:
-            get_items(object_type="playlist_songs",add=get_time(-7))
-        elif object_id == 99996:
-            get_items(object_type="playlist_songs",add=get_time(-30))
-        elif object_id == 99995:
-            get_items(object_type="playlist_songs",add=get_time(-90))
-        elif object_id:
-            get_items(object_type="playlist_songs",object_id=object_id)
-        else:
-            get_items(object_type="playlist_songs")
+# search for playlist song or recent playlist song ( this one for sure ) will
+# be implemented if i will find a valid reason ( now i have no one )
+#    get_items(object_type="playlists")
+#        if object_id == 99999:
+#            thisFilter = getFilterFromUser()
+#            if thisFilter:
+#                get_items(object_type="playlist_songs",filter=thisFilter)
+#        elif object_id == 99998:
+#            elem = AMPACHECONNECT()
+#            update = elem.findtext("add")        
+#            xbmc.log(update[:10],xbmc.LOGNOTICE)
+#            get_items(object_type="playlist_songs",add=update[:10])
+#        elif object_id == 99997:
+#            get_items(object_type="playlist_songs",add=get_time(-7))
+#        elif object_id == 99996:
+#            get_items(object_type="playlist_songs",add=get_time(-30))
+#        elif object_id == 99995:
+#            get_items(object_type="playlist_songs",add=get_time(-90))
+#        else:
+#           get_items(object_type="playlist_songs",object_id=object_id)
 
 if mode < 19:
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
