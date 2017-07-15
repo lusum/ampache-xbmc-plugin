@@ -272,9 +272,6 @@ def get_items(object_type, object_id=None, add=None, filter=None,limit=5000):
     elif object_type == 'playlists':
         mode = 14
         image = "DefaultFolder.png"
-    elif object_type == 'playlist_songs':
-        mode = 15
-        image = "DefaultFolder.png"
     names = set()
     if object_type == 'albums':
         for node in elem.iter('album'):
@@ -589,11 +586,6 @@ elif mode==14:
             get_items(object_type="playlist_songs",object_id=object_id)
         else:
             get_items(object_type="playlist_songs")
-
-#   playlist song mode 2 ?
-elif mode==15:
-    #"Hello Ampache Playlist!!!"
-    get_items(objecy_type="playlist_songs",object_id=object_id)
 
 if mode < 19:
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
