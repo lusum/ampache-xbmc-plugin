@@ -258,7 +258,7 @@ def get_items(object_type, object_id=None, add=None, filter=None,limit=5000):
     if object_type == 'albums' or object_type == 'playlists':
         if object_id:
             action = 'artist_albums'
-            addDir("All Songs",object_id,8, "DefaultFolder.png")
+            addDir("All Songs",object_id,12, "DefaultFolder.png")
     if object_id:
         filter = object_id
 
@@ -525,7 +525,7 @@ elif mode==7:
 
 
 #   random mode screen ( display artists, albums or songs ) ( called from mode
-#   7  , get_links ( allsongs )  and this function )
+#   7  )
 
 elif mode==8:
     #   artists
@@ -544,13 +544,15 @@ elif mode==8:
     if object_id == 99996:
         addDir("Refresh..",99996,8,os.path.join(imagepath, 'refresh_icon.png'))
         get_random('playlists')
-    else:
-        get_items(object_type="artist_songs",object_id=object_id )
 
 #   play track mode  ( mode set in add_links function )
 
 elif mode==9:
     play_track(object_id)
+
+# mode 12 : artist_songs
+elif mode==12:
+    get_items(object_type="artist_songs",object_id=object_id )
 
 #   playlist full list ( called from main screen )
 
