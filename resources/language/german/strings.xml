@@ -3,6 +3,6 @@
     <string id="30001">Benutzername</string>
     <string id="30002">Passwort</string>
     <string id="30004">Anzahl zufälliger Alben</string>
-    <string id="30006">Token</string>
-    <string id="30007">Token Ablaufdatum</string>
+    <string id="30007">Token</string>
+    <string id="30008">Token Ablaufdatum</string>
 </strings>

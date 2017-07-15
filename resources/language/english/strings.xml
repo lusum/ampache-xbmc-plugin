@@ -5,7 +5,8 @@
     <string id="30003">Number of random artists</string>
     <string id="30004">Number of random albums</string>
     <string id="30005">Number of random songs</string>
-    <string id="30006">Token</string>
-    <string id="30007">Token expiration</string>
-    <string id="30008">Disable SSL certificate verification ( DANGEROUS )</string>
+    <string id="30006">Number of random playlists</string>
+    <string id="30007">Token</string>
+    <string id="30008">Token expiration</string>
+    <string id="30009">Disable SSL certificate verification ( DANGEROUS )</string>
 </strings>

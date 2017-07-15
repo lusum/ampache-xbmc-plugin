@@ -1,0 +1,12 @@
+<strings>
+    <string id="30000">Url del server Ampache</string>
+    <string id="30001">Nome utente</string>
+    <string id="30002">Password</string>
+    <string id="30003">Numero di artisti casuali</string>
+    <string id="30004">Numero di album casuali</string>
+    <string id="30005">Numero di canzoni casuali</string>
+    <string id="30006">Numero di playlist casuali</string>
+    <string id="30007">Token</string>
+    <string id="30008">Token expiration</string>
+    <string id="30009">Disabilita la verifica del certificato SSL ( PERICOLOSO )</string>
+</strings>
