@@ -18,6 +18,7 @@ mediaDir = os.path.join( BASE_RESOURCE_PATH , 'media' )
 cacheDir = os.path.join( mediaDir , 'cache' )
 imagepath = os.path.join( mediaDir ,'images')
 
+
 #   string to bool function : from string 'true' or 'false' to boolean True or
 #   False, raise ValueError
 def str_to_bool(s):
@@ -47,9 +48,9 @@ def cacheArt(url):
                 ssl_certs_str = ampache.getSetting("disable_ssl_certs")
                 if str_to_bool(ssl_certs_str):
                     context = ssl._create_unverified_context()
-                    opener = urllib.urlopen(url, context=context)
+                    opener = urllib2.urlopen(url, context=context, timeout=100)
                 else:
-		    opener = urllib.urlopen(url)
+                    opener = urllib2.urlopen(url, timeout = 100)
 		if opener.headers.maintype == 'image':
 			extension = opener.headers['content-type']
 			tmpExt = extension.split("/")
@@ -129,12 +130,12 @@ def play_track(id):
     xbmcplugin.setResolvedUrl(handle=int(sys.argv[1]), succeeded=True,listitem=liz)
 
 # Main function for adding xbmc plugin elements
-def addDir(name,object_id,mode,iconimage,elem=None,artFilename=None):
-    if artFilename:
-        liz=xbmcgui.ListItem(name, iconImage=artFilename, thumbnailImage=artFilename)
-    else:
-        liz=xbmcgui.ListItem(name, iconImage="DefaultFolder.png", thumbnailImage=iconimage)
-    
+def addDir(name,object_id,mode,iconImage=None,elem=None):
+    if iconImage == None:
+        iconImage = "DefaultFolder.png"
+
+    liz=xbmcgui.ListItem(name, iconImage=iconImage, thumbnailImage=iconImage)
+
     liz.setInfo( type="Music", infoLabels={ "Title": name } )
     try:
         artist_elem = elem.find("artist")
@@ -265,7 +266,8 @@ def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
     return tree
 
     
-def get_items(object_type, object_id=None, add=None, filter=None,limit=5000):
+def get_items(object_type, object_id=None, add=None,
+        filter=None,limit=5000,useCacheArt=True ):
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
     xbmc.log("DEBUG: object_type " + object_type, xbmc.LOGDEBUG)
     action = object_type
@@ -273,7 +275,7 @@ def get_items(object_type, object_id=None, add=None, filter=None,limit=5000):
     if object_type == 'albums':
         if object_id:
             action = 'artist_albums'
-            addDir("All Songs",object_id,12, "DefaultFolder.png")
+            addDir("All Songs",object_id,12)
     if object_id:
         filter = object_id
 
@@ -288,29 +290,31 @@ def get_items(object_type, object_id=None, add=None, filter=None,limit=5000):
         mode = 14
         image = "DefaultFolder.png"
     if object_type == 'albums':
-        names = set()
+        allid = set()
         for node in elem.iter('album'):
             #no unicode function, cause urllib quot_plus error ( bug )
             fullname = node.findtext("name").encode("utf-8")
             fullname += " - "
             fullname += node.findtext("year").encode("utf-8")
+            album_id = int(node.attrib["id"])
             #remove duplicates in album names ( workaround for a problem in server comunication )
-            if fullname not in names:
-                names.add(fullname)
+            if album_id not in allid:
+                allid.add(album_id)
             else:
                 continue
-            
-            image = node.findtext("art")
-            xbmc.log("DEBUG: object_type - " + str(object_type) , xbmc.LOGDEBUG )
-            xbmc.log("DEBUG: Art - " + str(image), xbmc.LOGDEBUG )
-            try:
-                artFilename = cacheArt(image)        
-            except NameError:
-                image = "DefaultFolder.png"
-                addDir(fullname,node.attrib["id"],mode,image,node)
+            if useCacheArt:
+                image = node.findtext("art")
+                xbmc.log("DEBUG: object_type - " + str(object_type) , xbmc.LOGDEBUG )
+                xbmc.log("DEBUG: Art - " + str(image), xbmc.LOGDEBUG )
+                try:
+                    image = cacheArt(image)        
+                except NameError:
+                    image = "DefaultFolder.png"
+                else:
+                    xbmc.log("DEBUG: Art Filename: " + str(image), xbmc.LOGDEBUG )
             else:
-                xbmc.log("DEBUG: Art Filename: " + str(artFilename), xbmc.LOGDEBUG )
-                addDir(fullname, node.attrib["id"],mode,image,node, artFilename = artFilename)
+                image = "DefaultFolder.png"
+            addDir(fullname,node.attrib["id"],mode,image,node)
     if object_type == 'artists':
         for node in elem.iter('artist'):
             addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
@@ -351,6 +355,24 @@ def do_search(object_type):
     if thisFilter:
         get_items(object_type=object_type,filter=thisFilter)
 
+def get_recent(object_type,object_id):   
+    if object_id == 99998:
+        elem = AMPACHECONNECT()
+        update = elem.findtext("add")        
+        xbmc.log(update[:10],xbmc.LOGNOTICE)
+        get_items(object_type=object_type,add=update[:10])
+    elif object_id == 99997:
+        get_items(object_type=object_type,add=get_time(-7))
+    elif object_id == 99996:
+        get_items(object_type=object_type,add=get_time(-30))
+    elif object_id == 99995:
+        get_items(object_type=object_type,add=get_time(-90))
+
+#get rid of this function in the near future and use simply get_items with limit = None
+def get_all(object_type):
+    elem = AMPACHECONNECT()
+    limit=int(elem.findtext(object_type))
+    get_items(object_type=object_type, limit=limit, useCacheArt=False)
 
 def get_random(object_type):
     xbmc.log("DEBUG: object_type " + object_type, xbmc.LOGDEBUG)
@@ -382,7 +404,11 @@ def get_random(object_type):
                 fullname += node.findtext("artist").encode("utf-8")
                 fullname += " - "
                 fullname += node.findtext("year").encode("utf-8")
-                addDir(fullname,node.attrib["id"],3,node.findtext("art"),node)        
+                try:
+                    image = cacheArt(node.findtext("art"))
+                except NameError:
+                    image = "DefaultFolder.png"
+                addDir(fullname,node.attrib["id"],3,image,node)        
         elif object_type == 'artists':
             image = "DefaultFolder.png"
             for node in elem.iter("artist"):
@@ -436,64 +462,33 @@ elif mode==1:
     #search function
     if object_id == 99999:
         do_search("artists")
-    #four if for recent ( to rework in one function )
-    elif object_id == 99998:
-        elem = AMPACHECONNECT()
-        update = elem.findtext("add")        
-        xbmc.log(update[:10],xbmc.LOGNOTICE)
-        get_items(object_type="artists",add=update[:10])
-    elif object_id == 99997:
-        get_items(object_type="artists",add=get_time(-7))
-    elif object_id == 99996:
-        get_items(object_type="artists",add=get_time(-30))
-    elif object_id == 99995:
-        get_items(object_type="artists",add=get_time(-90))
+    #recent function
+    elif object_id > 99994 and object_id < 99999:
+        get_recent( "artists", object_id )
     #all artists list
     else:
-        elem = AMPACHECONNECT()
-        limit=int(elem.findtext("artists"))
-        get_items(object_type="artists", limit=limit)
+        get_all("artists")
        
 #   albums list ( called from main screen ( mode None ) , search
 #   screen ( mode 4 ) and recent ( mode 5 )  )
 
 elif mode==2:
-        if object_id == 99999:
-            do_search("albums")
-        elif object_id == 99998:
-            elem = AMPACHECONNECT()
-            update = elem.findtext("add")        
-            xbmc.log(update[:10],xbmc.LOGNOTICE)
-            get_items(object_type="albums",add=update[:10])
-        elif object_id == 99997:
-            get_items(object_type="albums",add=get_time(-7))
-        elif object_id == 99996:
-            get_items(object_type="albums",add=get_time(-30))
-        elif object_id == 99995:
-            get_items(object_type="albums",add=get_time(-90))
-        elif object_id:
-            get_items(object_type="albums",object_id=object_id)
-        else:
-            elem = AMPACHECONNECT()
-            limit=int(elem.findtext("albums"))
-            get_items(object_type="albums", limit=limit)
+    if object_id == 99999:
+        do_search("albums")
+    elif object_id > 99994 and object_id < 99999:
+        get_recent( "albums", object_id )
+    elif object_id:
+        get_items(object_type="albums",object_id=object_id)
+    else:
+        get_all("albums")
 
 #   song mode ( called from search screen ( mode 4 ) and recent ( mode 5 )  )
         
 elif mode==3:
         if object_id == 99999:
             do_search("songs")
-        elif object_id == 99998:
-            elem = AMPACHECONNECT()
-            update = elem.findtext("add")        
-            xbmc.log(update[:10],xbmc.LOGNOTICE)
-            get_items(object_type="songs",add=update[:10])
-        elif object_id == 99997:
-            get_items(object_type="songs",add=get_time(-7))
-        elif object_id == 99996:
-            get_items(object_type="songs",add=get_time(-30))
-        elif object_id == 99995:
-            get_items(object_type="songs",add=get_time(-90))
+        elif object_id > 99994 and object_id < 99999:
+            get_recent( "songs", object_id )
         else:
             get_items(object_type="album_songs",object_id=object_id)
 
@@ -580,17 +575,8 @@ elif mode==12:
 elif mode==13:
         if object_id == 99999:
             do_search("playlists")
-        elif object_id == 99998:
-            elem = AMPACHECONNECT()
-            update = elem.findtext("add")        
-            xbmc.log(update[:10],xbmc.LOGNOTICE)
-            get_items(object_type="playlists",add=update[:10])
-        elif object_id == 99997:
-            get_items(object_type="playlists",add=get_time(-7))
-        elif object_id == 99996:
-            get_items(object_type="playlists",add=get_time(-30))
-        elif object_id == 99995:
-            get_items(object_type="playlists",add=get_time(-90))
+        elif object_id > 99994 and object_id < 99999:
+            get_recent( "playlists", object_id )
         elif object_id:
             get_items(object_type="playlists",object_id=object_id)
         else:
