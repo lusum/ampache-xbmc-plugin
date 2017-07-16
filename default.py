@@ -317,7 +317,9 @@ def get_items(object_type, object_id=None, add=None, filter=None,limit=5000):
     if object_type == 'playlists':
         for node in elem.iter('playlist'):
             addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
-    if object_type == 'playlist_songs' or object_type == 'songs' or object_type == 'album_songs' or object_type == 'artist_songs':
+    if (object_type == 'playlist_songs' or object_type == 'songs' or
+            object_type == 'album_songs' or object_type == 'artist_songs' or
+            object_type == 'search_songs'):
         addSongLinks(elem)
 
 
@@ -343,6 +345,11 @@ def get_time(time_offset):
     dt = datetime.timedelta(days=time_offset)
     nd = d + dt
     return nd.isoformat()
+
+def do_search(object_type):
+    thisFilter = getFilterFromUser()
+    if thisFilter:
+        get_items(object_type=object_type,filter=thisFilter)
 
 
 def get_random(object_type):
@@ -428,9 +435,7 @@ elif mode==1:
     #artist, album, songs, playlist follow the same structure
     #search function
     if object_id == 99999:
-        thisFilter = getFilterFromUser()
-        if thisFilter:
-            get_items(object_type="artists",filter=thisFilter)
+        do_search("artists")
     #four if for recent ( to rework in one function )
     elif object_id == 99998:
         elem = AMPACHECONNECT()
@@ -454,9 +459,7 @@ elif mode==1:
 
 elif mode==2:
         if object_id == 99999:
-            thisFilter = getFilterFromUser()
-            if thisFilter:
-                get_items(object_type="albums",filter=thisFilter)
+            do_search("albums")
         elif object_id == 99998:
             elem = AMPACHECONNECT()
             update = elem.findtext("add")        
@@ -479,9 +482,7 @@ elif mode==2:
         
 elif mode==3:
         if object_id == 99999:
-            thisFilter = getFilterFromUser()
-            if thisFilter:
-                get_items(object_type="songs",filter=thisFilter)
+            do_search("songs")
         elif object_id == 99998:
             elem = AMPACHECONNECT()
             update = elem.findtext("add")        
@@ -504,6 +505,7 @@ elif mode==4:
     addDir("Search Albums...",99999,2,"DefaultFolder.png")
     addDir("Search Songs...",99999,3,"DefaultFolder.png")
     addDir("Search Playlists...",99999,13,"DefaultFolder.png")
+    addDir("Search All...",99999,11,"DefaultFolder.png")
 
 # recent additions screen ( called from main screen )
 
@@ -565,6 +567,10 @@ elif mode==8:
 elif mode==9:
     play_track(object_id)
 
+# mode 11 : search all
+elif mode==11:
+    do_search("search_songs")
+
 # mode 12 : artist_songs
 elif mode==12:
     get_items(object_type="artist_songs",object_id=object_id )
@@ -573,9 +579,7 @@ elif mode==12:
 
 elif mode==13:
         if object_id == 99999:
-            thisFilter = getFilterFromUser()
-            if thisFilter:
-                get_items(object_type="playlists",filter=thisFilter)
+            do_search("playlists")
         elif object_id == 99998:
             elem = AMPACHECONNECT()
             update = elem.findtext("add")        
