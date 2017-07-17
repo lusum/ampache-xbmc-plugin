@@ -152,7 +152,6 @@ def addDir(name,object_id,mode,iconImage=None,elem=None):
         pass
 
     u=sys.argv[0]+"?object_id="+str(object_id)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name)
-    xbmc.log("DEBUG: u - " + u, xbmc.LOGDEBUG )
     ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=True)
     return ok
 
@@ -273,18 +272,39 @@ def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
 
     
 def get_items(object_type, object_id=None, add=None,
-        filter=None,limit=5000,useCacheArt=True ):
+        filter=None,limit=5000,useCacheArt=True, object_subtype=None ):
     
     image = "DefaultFolder.png"
 
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
     xbmc.log("DEBUG: object_type " + object_type, xbmc.LOGDEBUG)
+    if object_subtype:
+        xbmc.log("DEBUG: object_subtype " + object_subtype, xbmc.LOGDEBUG)
     action = object_type
     
+    #do not use action = object_subtype cause in tags it is used only to
+    #discriminate between subtypes
     if object_type == 'albums':
-        if object_id:
+        if object_subtype == 'artist_albums':
             action = 'artist_albums'
             addDir("All Songs",object_id,12)
+        elif object_subtype == 'tag_albums':
+            action = 'tag_albums'
+    elif object_type == 'artists':
+        if object_subtype == 'tag_artists':
+            action = 'tag_artists'
+    elif object_type == 'songs':
+        if object_subtype == 'tag_songs':
+            action = 'tag_songs'
+        elif object_subtype == 'playlist_songs':
+            action = 'playlist_songs'
+        elif object_subtype == 'album_songs':
+            action = 'album_songs'
+        elif object_subtype == 'artist_songs':
+            action = 'artist_songs'
+        elif object_subtype == 'search_songs':
+            action = 'search_songs'
+
     if object_id:
         filter = object_id
 
@@ -296,7 +316,14 @@ def get_items(object_type, object_id=None, add=None,
         mode = 3
     elif object_type == 'playlists':
         mode = 14
-    
+    if object_type == 'tags':
+        if object_subtype == 'tag_artists':
+            mode = 19
+        elif object_subtype == 'tag_albums':
+            mode = 20
+        elif object_subtype == 'tag_songs':
+            mode = 21
+
     if object_type == 'albums':
         allid = set()
         for node in elem.iter('album'):
@@ -327,9 +354,10 @@ def get_items(object_type, object_id=None, add=None,
     if object_type == 'playlists':
         for node in elem.iter('playlist'):
             addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
-    if (object_type == 'playlist_songs' or object_type == 'songs' or
-            object_type == 'album_songs' or object_type == 'artist_songs' or
-            object_type == 'search_songs'):
+    if action == 'tags':
+        for node in elem.iter('tag'):
+            addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
+    if (object_type == 'songs'):
         addSongLinks(elem)
 
 
@@ -356,23 +384,23 @@ def get_time(time_offset):
     nd = d + dt
     return nd.isoformat()
 
-def do_search(object_type):
+def do_search(object_type,object_subtype=None):
     thisFilter = getFilterFromUser()
     if thisFilter:
-        get_items(object_type=object_type,filter=thisFilter)
+        get_items(object_type=object_type,filter=thisFilter,object_subtype=object_subtype)
 
-def get_recent(object_type,object_id):   
+def get_recent(object_type,object_id,object_subtype=None):   
     if object_id == 99998:
         elem = AMPACHECONNECT()
         update = elem.findtext("add")        
         xbmc.log(update[:10],xbmc.LOGNOTICE)
-        get_items(object_type=object_type,add=update[:10])
+        get_items(object_type=object_type,add=update[:10],object_subtype=object_subtype)
     elif object_id == 99997:
-        get_items(object_type=object_type,add=get_time(-7))
+        get_items(object_type=object_type,add=get_time(-7),object_subtype=object_subtype)
     elif object_id == 99996:
-        get_items(object_type=object_type,add=get_time(-30))
+        get_items(object_type=object_type,add=get_time(-30),object_subtype=object_subtype)
     elif object_id == 99995:
-        get_items(object_type=object_type,add=get_time(-90))
+        get_items(object_type=object_type,add=get_time(-90),object_subtype=object_subtype)
 
 #get rid of this function in the near future and use simply get_items with limit = None
 def get_all(object_type):
@@ -459,6 +487,7 @@ if mode==None:
     addDir("Artists (" + str(elem.findtext("artists")) + ")",None,1,"DefaultFolder.png")
     addDir("Albums (" + str(elem.findtext("albums")) + ")",None,2,"DefaultFolder.png")
     addDir("Playlists (" + str(elem.findtext("playlists")) + ")",None,13,"DefaultFolder.png")
+    addDir("Tags",None,18,"DefaultFolder.png")
 
 #   artist list ( called from main screen  ( mode None ) , search
 #   screen ( mode 4 ) and recent ( mode 5 )  )
@@ -484,7 +513,7 @@ elif mode==2:
     elif object_id > 99994 and object_id < 99999:
         get_recent( "albums", object_id )
     elif object_id:
-        get_items(object_type="albums",object_id=object_id)
+        get_items(object_type="albums",object_id=object_id,object_subtype="artist_albums")
     else:
         get_all("albums")
 
@@ -496,7 +525,7 @@ elif mode==3:
         elif object_id > 99994 and object_id < 99999:
             get_recent( "songs", object_id )
         else:
-            get_items(object_type="album_songs",object_id=object_id)
+            get_items(object_type="songs",object_id=object_id,object_subtype="album_songs")
 
 
 # search screen ( called from main screen )
@@ -507,6 +536,7 @@ elif mode==4:
     addDir("Search Songs...",99999,3,"DefaultFolder.png")
     addDir("Search Playlists...",99999,13,"DefaultFolder.png")
     addDir("Search All...",99999,11,"DefaultFolder.png")
+    addDir("Search Tags...",99999,18,"DefaultFolder.png")
 
 # recent additions screen ( called from main screen )
 
@@ -522,16 +552,16 @@ elif mode==5:
 elif mode==6:
     #not clean, but i don't want to change too much the old code
     if object_id > 99995:
-        addDir("Last Update",99998,99999-object_id,"DefaultFolder.png")
-        addDir("1 Week",99997,99999-object_id,"DefaultFolder.png")
-        addDir("1 Month",99996,99999-object_id,"DefaultFolder.png")
-        addDir("3 Months",99995,99999-object_id,"DefaultFolder.png")
-    #object_id for playlists is 99995 so 99999-object_id is 4 that is search function
-    else:
-        addDir("Last Update",99998,13,"DefaultFolder.png")
-        addDir("1 Week",99997,13,"DefaultFolder.png")
-        addDir("1 Month",99996,13,"DefaultFolder.png")
-        addDir("3 Months",99995,13,"DefaultFolder.png")
+        #object_id for playlists is 99995 so 99999-object_id is 4 that is search mode
+        #i have to use another method, so i use the hardcoded mode number (13)
+        mode_new = 99999-object_id
+    elif object_id == 99995:
+        mode_new = 13
+    
+    addDir("Last Update",99998,mode_new,"DefaultFolder.png")
+    addDir("1 Week",99997,mode_new,"DefaultFolder.png")
+    addDir("1 Month",99996,mode_new,"DefaultFolder.png")
+    addDir("3 Months",99995,mode_new,"DefaultFolder.png")
 
 # general random mode screen ( called from main screen )
 
@@ -540,7 +570,6 @@ elif mode==7:
     addDir("Random Albums...",99998,8,"DefaultFolder.png")
     addDir("Random Songs...",99997,8,"DefaultFolder.png")
     addDir("Random Playlists...",99996,8,"DefaultFolder.png")
-
 
 #   random mode screen ( display artists, albums or songs ) ( called from mode
 #   7  )
@@ -570,11 +599,11 @@ elif mode==9:
 
 # mode 11 : search all
 elif mode==11:
-    do_search("search_songs")
+    do_search("songs","search_songs")
 
 # mode 12 : artist_songs
 elif mode==12:
-    get_items(object_type="artist_songs",object_id=object_id )
+    get_items(object_type="songs",object_id=object_id,object_subtype="artist_songs" )
 
 #   playlist full list ( called from main screen )
 
@@ -591,7 +620,7 @@ elif mode==13:
 #   playlist song mode
 
 elif mode==14:
-    get_items(object_type="playlist_songs",object_id=object_id)
+    get_items(object_type="songs",object_id=object_id,object_subtype="playlist_songs")
 #        "Ampache Playlists"
 # search for playlist song or recent playlist song ( this one for sure ) will
 # be implemented if i will find a valid reason ( now i have no one )
@@ -614,5 +643,35 @@ elif mode==14:
 #        else:
 #           get_items(object_type="playlist_songs",object_id=object_id)
 
-if mode < 19:
+elif mode==18:
+    addDir("Artist tags...",object_id,19)
+    addDir("Album tags...",object_id,20)
+    addDir("Song tags...",object_id,21)
+
+elif mode==19:
+        if object_id == 99999:
+            do_search("tags","tag_artists")
+        elif object_id:
+            get_items(object_type="artists", object_subtype="tag_artists",object_id=object_id)
+        else:
+            get_items(object_type = "tags", object_subtype="tag_artists")
+
+
+elif mode==20:
+        if object_id == 99999:
+            do_search("tags","tag_albums")
+        elif object_id:
+            get_items(object_type="albums", object_subtype="tag_albums",object_id=object_id)
+        else:
+            get_items(object_type = "tags", object_subtype="tag_albums")
+
+elif mode==21:
+        if object_id == 99999:
+            do_search("tags","tag_songs")
+        elif object_id:
+            get_items(object_type="songs", object_subtype="tag_songs",object_id=object_id)
+        else:
+            get_items(object_type = "tags", object_subtype="tag_songs")
+
+if mode < 30:
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
