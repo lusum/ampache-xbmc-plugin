@@ -61,7 +61,7 @@ def cacheArt(url):
                         pathJpg = os.path.join( cacheDir , fname )
 			open( pathJpg, 'wb').write(opener.read())
                         xbmc.log("DEBUG: Cached " + str(fname), xbmc.LOGDEBUG )
-			return fname
+			return pathJpg
 		else:
                         xbmc.log("DEBUG: It didnt work", xbmc.LOGDEBUG )
                         raise NameError
@@ -135,10 +135,13 @@ def play_track(id):
 def addDir(name,object_id,mode,iconImage=None,elem=None):
     if iconImage == None:
         iconImage = "DefaultFolder.png"
-
-    liz=xbmcgui.ListItem(name, iconImage=iconImage, thumbnailImage=iconImage)
-
+    
+    liz=xbmcgui.ListItem(name)
+    liz.setArt( { "fanart" : iconImage, "poster" : iconImage, "banner" :
+        iconImage, "thumb": iconImage, "icon": iconImage, "landscape" :
+        iconImage } )
     liz.setInfo( type="Music", infoLabels={ "Title": name } )
+
     try:
         artist_elem = elem.find("artist")
         artist_id = int(artist_elem.attrib["id"]) 
@@ -149,6 +152,7 @@ def addDir(name,object_id,mode,iconImage=None,elem=None):
         pass
 
     u=sys.argv[0]+"?object_id="+str(object_id)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name)
+    xbmc.log("DEBUG: u - " + u, xbmc.LOGDEBUG )
     ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=True)
     return ok
 
@@ -307,11 +311,11 @@ def get_items(object_type, object_id=None, add=None,
             else:
                 continue
             if useCacheArt:
-                image = node.findtext("art")
+                imageUrl = node.findtext("art")
                 xbmc.log("DEBUG: object_type - " + str(object_type) , xbmc.LOGDEBUG )
                 xbmc.log("DEBUG: Art - " + str(image), xbmc.LOGDEBUG )
                 try:
-                    image = cacheArt(image)        
+                    image = cacheArt(imageUrl)        
                 except NameError:
                     image = "DefaultFolder.png"
                 else:
