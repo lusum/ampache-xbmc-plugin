@@ -270,6 +270,9 @@ def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
     
 def get_items(object_type, object_id=None, add=None,
         filter=None,limit=5000,useCacheArt=True ):
+    
+    image = "DefaultFolder.png"
+
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
     xbmc.log("DEBUG: object_type " + object_type, xbmc.LOGDEBUG)
     action = object_type
@@ -285,12 +288,11 @@ def get_items(object_type, object_id=None, add=None,
 
     if object_type == 'artists':
         mode = 2
-        image = "DefaultFolder.png"
     elif object_type == 'albums':
         mode = 3
     elif object_type == 'playlists':
         mode = 14
-        image = "DefaultFolder.png"
+    
     if object_type == 'albums':
         allid = set()
         for node in elem.iter('album'):
@@ -314,8 +316,6 @@ def get_items(object_type, object_id=None, add=None,
                     image = "DefaultFolder.png"
                 else:
                     xbmc.log("DEBUG: Art Filename: " + str(image), xbmc.LOGDEBUG )
-            else:
-                image = "DefaultFolder.png"
             addDir(fullname,node.attrib["id"],mode,image,node)
     if object_type == 'artists':
         for node in elem.iter('artist'):
