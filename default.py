@@ -108,6 +108,29 @@ def addSongLinks(elem):
         liz=xbmcgui.ListItem()
         fillListItemWithSongInfo(liz, node)   
         liz.setProperty("IsPlayable", "true")
+
+        cm = []
+        try:
+            artist_elem = node.find("artist")
+            artist_id = int(artist_elem.attrib["id"])
+            cm.append( ( "Show artist from this song",
+            "XBMC.Container.Update(%s?object_id=%s&mode=15)" % (
+                sys.argv[0],artist_id ) ) )
+        except:
+            pass
+        
+        try:
+            album_elem = node.find("album")
+            album_id = int(album_elem.attrib["id"])
+            cm.append( ( "Show album from this song",
+            "XBMC.Container.Update(%s?object_id=%s&mode=16)" % (
+                sys.argv[0],album_id ) ) )
+        except:
+            pass
+
+        if cm != []:
+            liz.addContextMenuItems(cm)
+
         song_elem = node.find("song")
         song_id = int(node.attrib["id"])
         track_parameters = { "mode": 9, "object_id": song_id}
@@ -290,9 +313,13 @@ def get_items(object_type, object_id=None, add=None,
             addDir("All Songs",object_id,12)
         elif object_subtype == 'tag_albums':
             action = 'tag_albums'
+        elif object_subtype == 'album':
+            action = 'album'
     elif object_type == 'artists':
         if object_subtype == 'tag_artists':
             action = 'tag_artists'
+        if object_subtype == 'artist':
+            action = 'artist'
     elif object_type == 'songs':
         if object_subtype == 'tag_songs':
             action = 'tag_songs'
@@ -643,6 +670,12 @@ elif mode==14:
 #        else:
 #           get_items(object_type="playlist_songs",object_id=object_id)
 
+elif mode==15:
+    get_items(object_type="artists",object_id=object_id,object_subtype="artist")
+
+elif mode==16:
+    get_items(object_type="albums",object_id=object_id,object_subtype="album")
+
 elif mode==18:
     addDir("Artist tags...",object_id,19)
     addDir("Album tags...",object_id,20)
@@ -655,7 +688,6 @@ elif mode==19:
             get_items(object_type="artists", object_subtype="tag_artists",object_id=object_id)
         else:
             get_items(object_type = "tags", object_subtype="tag_artists")
-
 
 elif mode==20:
         if object_id == 99999:
