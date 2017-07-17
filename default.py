@@ -259,9 +259,9 @@ def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
             ssl_certs_str = ampache.getSetting("disable_ssl_certs")
             if str_to_bool(ssl_certs_str):
                 gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-                response = urllib2.urlopen(req, context=gcontext)
+                response = urllib2.urlopen(req, context=gcontext, timeout=100)
             else:
-                response = urllib2.urlopen(req)
+                response = urllib2.urlopen(req, timeout=100)
             contents = response.read()
             tree=ET.XML(contents)
             response.close()
