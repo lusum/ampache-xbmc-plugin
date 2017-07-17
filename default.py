@@ -94,6 +94,8 @@ def fillListItemWithSongInfo(li,node):
         node.findtext("year") } )
     li.setInfo( type="music", infoLabels={ 'Tracknumber' :
         node.findtext("track") } )
+    li.setInfo( type="music", infoLabels={ 'Rating' :
+        node.findtext("preciserating") } )
     
 # Used to populate items for songs on XBMC. Calls plugin script with mode == 9 and object_id == (ampache song id)
 # TODO: Merge with addDir(). Same basic idea going on, this one adds links all at once, that one does it one at a time
