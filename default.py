@@ -75,7 +75,8 @@ def fillListItemWithSongInfo(li,node):
         albumArt = "DefaultFolder.png"
     xbmc.log("DEBUG: albumArt - " + str(albumArt), xbmc.LOGDEBUG )
     li.setLabel(unicode(node.findtext("title")))
-    li.setArt( { "banner" : albumArt, "thumb": albumArt, "icon": albumArt } )
+    li.setArt( { "banner" : albumArt, "thumb": albumArt, "icon": albumArt,
+        "fanart" : albumArt } )
 #needed by play_track to play the song, added here to uniform api
     li.setPath(node.findtext("url"))
 #keep setInfo separate, old version with infoLabels list cause strange bug on
@@ -164,7 +165,8 @@ def addDir(name,object_id,mode,iconImage=None,elem=None):
         iconImage = "DefaultFolder.png"
     
     liz=xbmcgui.ListItem(name)
-    liz.setArt( { "banner" : iconImage, "thumb": iconImage, "icon": iconImage } )
+    liz.setArt( { "banner" : iconImage, "thumb": iconImage, "icon": iconImage,
+        "fanart": iconImage} )
     liz.setInfo( type="Music", infoLabels={ "Title": name } )
 
     try:
