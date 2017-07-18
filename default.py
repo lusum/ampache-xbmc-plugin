@@ -101,6 +101,10 @@ def fillListItemWithSongInfo(li,node):
 # TODO: Merge with addDir(). Same basic idea going on, this one adds links all at once, that one does it one at a time
 #       Also, some property things, some different context menu things.
 def addSongLinks(elem):
+   
+    #win_id is necessary to avoid problems in musicplaylist window, where this
+    #script doesn't work
+    curr_win_id = xbmcgui.getCurrentWindowId()
     xbmcplugin.setContent(int(sys.argv[1]), "songs")
     ok=True
     it=[]
@@ -114,8 +118,8 @@ def addSongLinks(elem):
             artist_elem = node.find("artist")
             artist_id = int(artist_elem.attrib["id"])
             cm.append( ( "Show artist from this song",
-            "XBMC.Container.Update(%s?object_id=%s&mode=15)" % (
-                sys.argv[0],artist_id ) ) )
+            "XBMC.Container.Update(%s?object_id=%s&mode=15&win_id=%s)" % (
+                sys.argv[0],artist_id, curr_win_id ) ) )
         except:
             pass
         
@@ -123,8 +127,8 @@ def addSongLinks(elem):
             album_elem = node.find("album")
             album_id = int(album_elem.attrib["id"])
             cm.append( ( "Show album from this song",
-            "XBMC.Container.Update(%s?object_id=%s&mode=16)" % (
-                sys.argv[0],album_id ) ) )
+            "XBMC.Container.Update(%s?object_id=%s&mode=16&win_id=%s)" % (
+                sys.argv[0],album_id, curr_win_id ) ) )
         except:
             pass
 
@@ -486,6 +490,7 @@ params=get_params()
 name=None
 mode=None
 object_id=None
+win_id=None
 
 try:
         name=urllib.unquote_plus(params["name"])
@@ -500,6 +505,11 @@ except:
 try:
         object_id=int(params["object_id"])
         xbmc.log("DEBUG: object_id " + str(object_id), xbmc.LOGDEBUG)
+except:
+        pass
+try:
+        win_id=int(params["win_id"])
+        xbmc.log("DEBUG: win_id " + str(win_id), xbmc.LOGDEBUG)
 except:
         pass
 
@@ -669,9 +679,13 @@ elif mode==14:
 #           get_items(object_type="playlist_songs",object_id=object_id)
 
 elif mode==15:
+    if xbmc.getCondVisibility("Window.IsActive(musicplaylist)"):
+        xbmc.executebuiltin("XBMC.ActivateWindow(%s)" % (win_id,))
     get_items(object_type="artists",object_id=object_id,object_subtype="artist")
 
 elif mode==16:
+    if xbmc.getCondVisibility("Window.IsActive(musicplaylist)"):
+        xbmc.executebuiltin("XBMC.ActivateWindow(%s)" % (win_id,))
     get_items(object_type="albums",object_id=object_id,object_subtype="album")
 
 elif mode==18:
