@@ -67,6 +67,27 @@ def cacheArt(url):
                         raise NameError
 			#return False
 
+def get_infolabels(object_type , node):
+    infoLabels = None
+    if object_type == 'albums':
+        infoLabels = {
+            'Title' : unicode(node.findtext("title")) ,
+            'Album' : unicode(node.findtext("title")) ,
+            'Artist' : unicode(node.findtext("artist")),
+            'Disknumber' : unicode(node.findtext("disk")),
+            'Year' : node.findtext("year") ,
+            'Rating' : node.findtext("preciserating")
+        }
+ 
+    elif object_type == 'artists':
+        
+        infoLabels = {
+            'Title' : unicode(node.findtext("title")) ,
+            'Artist' : unicode(node.findtext("title")),
+            'Rating' : node.findtext("preciserating")
+        }
+    return infoLabels
+
 #handle albumArt and song info
 def fillListItemWithSongInfo(li,node):
     try:
@@ -74,29 +95,31 @@ def fillListItemWithSongInfo(li,node):
     except NameError:
         albumArt = "DefaultFolder.png"
     xbmc.log("DEBUG: albumArt - " + str(albumArt), xbmc.LOGDEBUG )
+
     li.setLabel(unicode(node.findtext("title")))
-    li.setArt( { "banner" : albumArt, "thumb": albumArt, "icon": albumArt,
-        "fanart" : albumArt } )
+    art_labels = {
+            'banner' : albumArt, 
+            'thumb': albumArt, 
+            'icon': albumArt,
+            'fanart': albumArt
+            }
+    li.setArt( art_labels )
 #needed by play_track to play the song, added here to uniform api
     li.setPath(node.findtext("url"))
-#keep setInfo separate, old version with infoLabels list cause strange bug on
-#kodi 15.2
-    li.setInfo( type="music", infoLabels={ 'Title' :
-        unicode(node.findtext("title")) })
-    li.setInfo( type="music", infoLabels={ 'Artist' :
-        unicode(node.findtext("artist")) } )
-    li.setInfo( type="music", infoLabels={ 'Album' :
-        unicode(node.findtext("album")) } )
-    li.setInfo( type="music", infoLabels={ 'Size' :
-        node.findtext("size") } )
-    li.setInfo( type="music", infoLabels={ 'Duration' :
-        node.findtext("time") } )
-    li.setInfo( type="music", infoLabels={ 'Year' :
-        node.findtext("year") } )
-    li.setInfo( type="music", infoLabels={ 'Tracknumber' :
-        node.findtext("track") } )
-    li.setInfo( type="music", infoLabels={ 'Rating' :
-        node.findtext("preciserating") } )
+
+    song_labels = {
+            'Title' : unicode(node.findtext("title")) ,
+            'Artist' : unicode(node.findtext("artist")),
+            'Album' :  unicode(node.findtext("album")),
+            'Size' : node.findtext("size") ,
+            'Duration' : node.findtext("time"),
+            'Year' : node.findtext("year") ,
+            'Tracknumber' : node.findtext("track"),
+            'Rating' : node.findtext("preciserating")
+        }
+ 
+    li.setInfo( type="music", infoLabels=song_labels )
+    li.setMimeType(node.findtext("mime"))
     
 # Used to populate items for songs on XBMC. Calls plugin script with mode == 9 and object_id == (ampache song id)
 # TODO: Merge with addDir(). Same basic idea going on, this one adds links all at once, that one does it one at a time
@@ -160,14 +183,26 @@ def play_track(id):
     xbmcplugin.setResolvedUrl(handle=int(sys.argv[1]), succeeded=True,listitem=liz)
 
 # Main function for adding xbmc plugin elements
-def addDir(name,object_id,mode,iconImage=None,elem=None):
+def addDir(name,object_id,mode,iconImage=None,elem=None,infoLabels=None):
     if iconImage == None:
         iconImage = "DefaultFolder.png"
     
+    if infoLabels == None:
+        infoLabels={ "Title": name }
+    
+
     liz=xbmcgui.ListItem(name)
-    liz.setArt( { "banner" : iconImage, "thumb": iconImage, "icon": iconImage,
-        "fanart": iconImage} )
-    liz.setInfo( type="Music", infoLabels={ "Title": name } )
+
+    art_labels = {
+            'banner' : iconImage, 
+            'thumb': iconImage, 
+            'icon': iconImage,
+            'fanart': iconImage
+            }
+    
+    liz.setInfo( type="Music", infoLabels=infoLabels )
+    liz.setArt( art_labels )
+    liz.setProperty('IsPlayable', 'false')
 
     try:
         artist_elem = elem.find("artist")
@@ -360,8 +395,6 @@ def get_items(object_type, object_id=None, add=None,
         for node in elem.iter('album'):
             #no unicode function, cause urllib quot_plus error ( bug )
             fullname = node.findtext("name").encode("utf-8")
-            fullname += " - "
-            fullname += node.findtext("year").encode("utf-8")
             album_id = int(node.attrib["id"])
             #remove duplicates in album names ( workaround for a problem in server comunication )
             if album_id not in allid:
@@ -378,17 +411,17 @@ def get_items(object_type, object_id=None, add=None,
                     image = "DefaultFolder.png"
                 else:
                     xbmc.log("DEBUG: Art Filename: " + str(image), xbmc.LOGDEBUG )
-            addDir(fullname,node.attrib["id"],mode,image,node)
-    if object_type == 'artists':
+            addDir(fullname,node.attrib["id"],mode,image,node,infoLabels=get_infolabels(object_type,node))
+    elif object_type == 'artists':
         for node in elem.iter('artist'):
-            addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
-    if object_type == 'playlists':
+            addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node,infoLabels=get_infolabels(object_type,node))
+    elif object_type == 'playlists':
         for node in elem.iter('playlist'):
             addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
-    if action == 'tags':
+    elif object_type == 'tags':
         for node in elem.iter('tag'):
             addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
-    if (object_type == 'songs'):
+    elif (object_type == 'songs'):
         addSongLinks(elem)
 
 
@@ -467,18 +500,16 @@ def get_random(object_type):
                 fullname = node.findtext("name").encode("utf-8")
                 fullname += " - "
                 fullname += node.findtext("artist").encode("utf-8")
-                fullname += " - "
-                fullname += node.findtext("year").encode("utf-8")
                 try:
                     image = cacheArt(node.findtext("art"))
                 except NameError:
                     image = "DefaultFolder.png"
-                addDir(fullname,node.attrib["id"],3,image,node)        
+                addDir(fullname,node.attrib["id"],3,image,node,infoLabels=get_infolabels(object_type,node))        
         elif object_type == 'artists':
             image = "DefaultFolder.png"
             for node in elem.iter("artist"):
                 fullname = node.findtext("name").encode("utf-8")
-                addDir(fullname,node.attrib["id"],2,image,node)        
+                addDir(fullname,node.attrib["id"],2,image,node,infoLabels=get_infolabels(object_type,node))        
         elif object_type == 'playlists':
             image = "DefaultFolder.png"
             for node in elem.iter("playlist"):
