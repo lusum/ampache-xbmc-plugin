@@ -421,7 +421,7 @@ def get_items(object_type, object_id=None, add=None,
     elif object_type == 'tags':
         for node in elem.iter('tag'):
             addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
-    elif (object_type == 'songs'):
+    elif object_type == 'songs':
         addSongLinks(elem)
 
 
