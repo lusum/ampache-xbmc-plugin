@@ -773,7 +773,7 @@ elif mode==23:
 
 elif mode==24:
     items = (int(ampache.getSetting("random_albums"))*3)+3
-    get_items(object_type="stats",object_subtype="hightest",limit=items
+    get_items(object_type="stats",object_subtype="hightest",limit=items)
 
 elif mode==25:
     items = (int(ampache.getSetting("random_albums"))*3)+3
