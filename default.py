@@ -295,8 +295,9 @@ def AMPACHECONNECT():
     ampache.setSetting('token-exp',str(nTime+24000))
     return elem
 
-def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
-    thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset)
+def ampache_http_request(action,add=None, filter=None, limit=5000,
+        offset=0,amtype=None, exact=None):
+    thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset,amtype=amtype, exact=exact)
     xbmc.log("URL " + thisURL, xbmc.LOGNOTICE)
     req = urllib2.Request(thisURL)
     ssl_certs_str = ampache.getSetting("disable_ssl_certs")
@@ -319,7 +320,7 @@ def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
         errornode = tree.find("error")
         if errornode.attrib["code"]=="401":
             tree = AMPACHECONNECT()
-            thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset)
+            thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset,amtype=amtype,exact=exact)
             req = urllib2.Request(thisURL)
             ssl_certs_str = ampache.getSetting("disable_ssl_certs")
             if str_to_bool(ssl_certs_str):
@@ -334,11 +335,17 @@ def ampache_http_request(action,add=None, filter=None, limit=5000, offset=0):
 
     
 def get_items(object_type, object_id=None, add=None,
-        filter=None,limit=5000,useCacheArt=True, object_subtype=None ):
+        filter=None,limit=5000,useCacheArt=True, object_subtype=None, exact=None ):
     
     image = "DefaultFolder.png"
+    amtype = None
 
-    xbmcplugin.setContent(int(sys.argv[1]), object_type)
+    content_type = object_type
+    
+    if object_type == 'stats':
+        content_type = 'albums'
+
+    xbmcplugin.setContent(int(sys.argv[1]), content_type)
     xbmc.log("DEBUG: object_type " + object_type, xbmc.LOGDEBUG)
     if object_subtype:
         xbmc.log("DEBUG: object_subtype " + object_subtype, xbmc.LOGDEBUG)
@@ -370,15 +377,18 @@ def get_items(object_type, object_id=None, add=None,
             action = 'artist_songs'
         elif object_subtype == 'search_songs':
             action = 'search_songs'
+    if object_type == 'stats':
+        amtype = object_subtype
 
     if object_id:
         filter = object_id
 
-    elem = ampache_http_request(action,add=add,filter=filter, limit=limit)
+    elem = ampache_http_request(action,add=add,filter=filter, limit=limit,
+            amtype=amtype, exact=exact)
 
     if object_type == 'artists':
         mode = 2
-    elif object_type == 'albums':
+    elif object_type == 'albums' or object_type == 'stats':
         mode = 3
     elif object_type == 'playlists':
         mode = 14
@@ -390,7 +400,7 @@ def get_items(object_type, object_id=None, add=None,
         elif object_subtype == 'tag_songs':
             mode = 21
 
-    if object_type == 'albums':
+    if object_type == 'albums' or object_type == 'stats':
         allid = set()
         for node in elem.iter('album'):
             #no unicode function, cause urllib quot_plus error ( bug )
@@ -411,10 +421,10 @@ def get_items(object_type, object_id=None, add=None,
                     image = "DefaultFolder.png"
                 else:
                     xbmc.log("DEBUG: Art Filename: " + str(image), xbmc.LOGDEBUG )
-            addDir(fullname,node.attrib["id"],mode,image,node,infoLabels=get_infolabels(object_type,node))
+            addDir(fullname,node.attrib["id"],mode,image,node,infoLabels=get_infolabels("albums",node))
     elif object_type == 'artists':
         for node in elem.iter('artist'):
-            addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node,infoLabels=get_infolabels(object_type,node))
+            addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node,infoLabels=get_infolabels("artists",node))
     elif object_type == 'playlists':
         for node in elem.iter('playlist'):
             addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node)
@@ -425,7 +435,7 @@ def get_items(object_type, object_id=None, add=None,
         addSongLinks(elem)
 
 
-def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0):
+def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0,amtype=None,exact=None):
     tokenexp = int(ampache.getSetting('token-exp'))
     if int(time.time()) > tokenexp:
         xbmc.log("refreshing token...", xbmc.LOGNOTICE )
@@ -440,6 +450,10 @@ def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0):
         thisURL += '&filter=' +urllib.quote_plus(str(filter))
     if add:
         thisURL += '&add=' + add
+    if amtype:
+        thisURL += '&type=' + amtype
+    if exact:
+        thisURL += '&exact=' + exact
     return thisURL
 
 def get_time(time_offset):
@@ -552,6 +566,7 @@ if mode==None:
     addDir("Search...",0,4,"DefaultFolder.png")
     addDir("Recent...",0,5,"DefaultFolder.png")
     addDir("Random...",0,7,"DefaultFolder.png")
+    addDir("Various...",0,23,"DefaultFolder.png")
     addDir("Artists (" + str(elem.findtext("artists")) + ")",None,1,"DefaultFolder.png")
     addDir("Albums (" + str(elem.findtext("albums")) + ")",None,2,"DefaultFolder.png")
     addDir("Playlists (" + str(elem.findtext("playlists")) + ")",None,13,"DefaultFolder.png")
@@ -749,6 +764,25 @@ elif mode==21:
             get_items(object_type="songs", object_subtype="tag_songs",object_id=object_id)
         else:
             get_items(object_type = "tags", object_subtype="tag_songs")
+
+elif mode==23:
+    addDir("Hightest Rated Albums...",object_id,24)
+    addDir("Frequent Albums...",object_id,25)
+    addDir("Flagged Albums...",object_id,26)
+    addDir("Random Albums ( server side )...",object_id,27)
+
+elif mode==24:
+    get_items(object_type="stats",object_subtype="hightest",limit=15)
+
+elif mode==25:
+    get_items(object_type="stats",object_subtype="frequent",limit=15)
+
+elif mode==26:
+    get_items(object_type="stats",object_subtype="flagged",limit=15)
+
+elif mode==27:
+    random_items = (int(ampache.getSetting("random_albums"))*3)+3
+    get_items(object_type="stats",object_subtype="random",limit=random_items)
 
 if mode < 30:
     xbmcplugin.endOfDirectory(int(sys.argv[1]))

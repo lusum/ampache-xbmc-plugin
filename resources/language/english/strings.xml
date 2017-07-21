@@ -5,7 +5,7 @@
     <string id="30003">Use api key instead of username/password</string>
     <string id="30004">Api key</string>
     <string id="30005">Number of random artists</string>
-    <string id="30006">Number of random albums</string>
+		<string id="30006">Number of albums ( random and stats )</string>
     <string id="30007">Number of random songs</string>
     <string id="30008">Number of random playlists</string>
     <string id="30009">Token</string>
