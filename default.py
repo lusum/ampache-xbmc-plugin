@@ -772,17 +772,20 @@ elif mode==23:
     addDir("Random Albums ( server side )...",object_id,27)
 
 elif mode==24:
-    get_items(object_type="stats",object_subtype="hightest",limit=15)
+    items = (int(ampache.getSetting("random_albums"))*3)+3
+    get_items(object_type="stats",object_subtype="hightest",limit=items
 
 elif mode==25:
-    get_items(object_type="stats",object_subtype="frequent",limit=15)
+    items = (int(ampache.getSetting("random_albums"))*3)+3
+    get_items(object_type="stats",object_subtype="frequent",limit=items)
 
 elif mode==26:
-    get_items(object_type="stats",object_subtype="flagged",limit=15)
+    items = (int(ampache.getSetting("random_albums"))*3)+3
+    get_items(object_type="stats",object_subtype="flagged",limit=items)
 
 elif mode==27:
-    random_items = (int(ampache.getSetting("random_albums"))*3)+3
-    get_items(object_type="stats",object_subtype="random",limit=random_items)
+    items = (int(ampache.getSetting("random_albums"))*3)+3
+    get_items(object_type="stats",object_subtype="random",limit=items)
 
 if mode < 30:
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
