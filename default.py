@@ -766,10 +766,10 @@ elif mode==21:
             get_items(object_type = "tags", object_subtype="tag_songs")
 
 elif mode==23:
-    addDir("Hightest Rated Albums...",object_id,24)
-    addDir("Frequent Albums...",object_id,25)
-    addDir("Flagged Albums...",object_id,26)
-    addDir("Random Albums ( server side )...",object_id,27)
+    addDir("Hightest Rated Albums...",99999,24)
+    addDir("Frequent Albums...",99999,25)
+    addDir("Flagged Albums...",99999,26)
+    addDir("Random Albums ( server side )...",99999,27)
 
 elif mode==24:
     items = (int(ampache.getSetting("random_albums"))*3)+3
@@ -784,6 +784,7 @@ elif mode==26:
     get_items(object_type="stats",object_subtype="flagged",limit=items)
 
 elif mode==27:
+    addDir("Refresh..",99999,27,os.path.join(imagepath, 'refresh_icon.png'))
     items = (int(ampache.getSetting("random_albums"))*3)+3
     get_items(object_type="stats",object_subtype="random",limit=items)
 
