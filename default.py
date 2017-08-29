@@ -86,6 +86,19 @@ def get_infolabels(object_type , node):
             'Artist' : unicode(node.findtext("title")),
             'Rating' : node.findtext("preciserating")
         }
+
+    elif object_type == 'songs':
+        infoLabels = {
+            'Title' : unicode(node.findtext("title")) ,
+            'Artist' : unicode(node.findtext("artist")),
+            'Album' :  unicode(node.findtext("album")),
+            'Size' : node.findtext("size") ,
+            'Duration' : node.findtext("time"),
+            'Year' : node.findtext("year") ,
+            'Tracknumber' : node.findtext("track"),
+            'Rating' : node.findtext("preciserating")
+        }
+
     return infoLabels
 
 #handle albumArt and song info
@@ -106,19 +119,8 @@ def fillListItemWithSongInfo(li,node):
     li.setArt( art_labels )
 #needed by play_track to play the song, added here to uniform api
     li.setPath(node.findtext("url"))
-
-    song_labels = {
-            'Title' : unicode(node.findtext("title")) ,
-            'Artist' : unicode(node.findtext("artist")),
-            'Album' :  unicode(node.findtext("album")),
-            'Size' : node.findtext("size") ,
-            'Duration' : node.findtext("time"),
-            'Year' : node.findtext("year") ,
-            'Tracknumber' : node.findtext("track"),
-            'Rating' : node.findtext("preciserating")
-        }
- 
-    li.setInfo( type="music", infoLabels=song_labels )
+    
+    li.setInfo( type="music", infoLabels=get_infolabels("songs", node) )
     li.setMimeType(node.findtext("mime"))
     
 # Used to populate items for songs on XBMC. Calls plugin script with mode == 9 and object_id == (ampache song id)
@@ -190,7 +192,6 @@ def addDir(name,object_id,mode,iconImage=None,elem=None,infoLabels=None):
     if infoLabels == None:
         infoLabels={ "Title": name }
     
-
     liz=xbmcgui.ListItem(name)
 
     art_labels = {
@@ -340,15 +341,12 @@ def get_items(object_type, object_id=None, add=None,
     image = "DefaultFolder.png"
     amtype = None
 
-    content_type = object_type
-    
-    if object_type == 'stats':
-        content_type = 'albums'
-
-    xbmcplugin.setContent(int(sys.argv[1]), content_type)
+    xbmcplugin.setContent(int(sys.argv[1]), object_type)
     xbmc.log("DEBUG: object_type " + object_type, xbmc.LOGDEBUG)
     if object_subtype:
         xbmc.log("DEBUG: object_subtype " + object_subtype, xbmc.LOGDEBUG)
+
+    #default: object_type is the action,otherwise see the if list below
     action = object_type
     
     #do not use action = object_subtype cause in tags it is used only to
@@ -361,6 +359,19 @@ def get_items(object_type, object_id=None, add=None,
             action = 'tag_albums'
         elif object_subtype == 'album':
             action = 'album'
+        #stats management 
+        elif object_subtype == 'hightest':
+            action = 'stats'
+            amtype = object_subtype
+        elif object_subtype == 'frequent':
+            action = 'stats'
+            amtype = object_subtype
+        elif object_subtype == 'flagged':
+            action = 'stats'
+            amtype = object_subtype
+        elif object_subtype == 'random':
+            action = 'stats'
+            amtype = object_subtype
     elif object_type == 'artists':
         if object_subtype == 'tag_artists':
             action = 'tag_artists'
@@ -377,8 +388,6 @@ def get_items(object_type, object_id=None, add=None,
             action = 'artist_songs'
         elif object_subtype == 'search_songs':
             action = 'search_songs'
-    if object_type == 'stats':
-        amtype = object_subtype
 
     if object_id:
         filter = object_id
@@ -386,9 +395,11 @@ def get_items(object_type, object_id=None, add=None,
     elem = ampache_http_request(action,add=add,filter=filter, limit=limit,
             amtype=amtype, exact=exact)
 
+    #after the request, set the mode 
+
     if object_type == 'artists':
         mode = 2
-    elif object_type == 'albums' or object_type == 'stats':
+    elif object_type == 'albums':
         mode = 3
     elif object_type == 'playlists':
         mode = 14
@@ -400,7 +411,7 @@ def get_items(object_type, object_id=None, add=None,
         elif object_subtype == 'tag_songs':
             mode = 21
 
-    if object_type == 'albums' or object_type == 'stats':
+    if object_type == 'albums':
         allid = set()
         for node in elem.iter('album'):
             #no unicode function, cause urllib quot_plus error ( bug )
@@ -773,20 +784,20 @@ elif mode==23:
 
 elif mode==24:
     items = (int(ampache.getSetting("random_albums"))*3)+3
-    get_items(object_type="stats",object_subtype="hightest",limit=items)
+    get_items(object_type="albums",object_subtype="hightest",limit=items)
 
 elif mode==25:
     items = (int(ampache.getSetting("random_albums"))*3)+3
-    get_items(object_type="stats",object_subtype="frequent",limit=items)
+    get_items(object_type="albums",object_subtype="frequent",limit=items)
 
 elif mode==26:
     items = (int(ampache.getSetting("random_albums"))*3)+3
-    get_items(object_type="stats",object_subtype="flagged",limit=items)
+    get_items(object_type="albums",object_subtype="flagged",limit=items)
 
 elif mode==27:
     addDir("Refresh..",99999,27,os.path.join(imagepath, 'refresh_icon.png'))
     items = (int(ampache.getSetting("random_albums"))*3)+3
-    get_items(object_type="stats",object_subtype="random",limit=items)
+    get_items(object_type="albums",object_subtype="random",limit=items)
 
 if mode < 30:
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
