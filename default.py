@@ -67,6 +67,23 @@ def cacheArt(url):
                         raise NameError
 			#return False
 
+def get_artLabels(albumArt):
+    art_labels = {
+            'banner' : albumArt, 
+            'thumb': albumArt, 
+            'icon': albumArt,
+            'fanart': albumArt
+            }
+    return art_labels
+
+def get_art(node):
+    try:
+        albumArt = cacheArt(node.findtext("art"))
+    except NameError:
+        albumArt = "DefaultFolder.png"
+    xbmc.log("DEBUG: albumArt - " + str(albumArt), xbmc.LOGDEBUG )
+    return albumArt
+
 def get_infolabels(object_type , node):
     infoLabels = None
     if object_type == 'albums':
@@ -102,27 +119,15 @@ def get_infolabels(object_type , node):
     return infoLabels
 
 #handle albumArt and song info
-def fillListItemWithSongInfo(li,node):
-    try:
-        albumArt = cacheArt(node.findtext("art"))
-    except NameError:
-        albumArt = "DefaultFolder.png"
-    xbmc.log("DEBUG: albumArt - " + str(albumArt), xbmc.LOGDEBUG )
+def fillListItemWithSongInfo(liz,node):
+    albumArt = get_art(node)
+    liz.setLabel(unicode(node.findtext("title")))
+    liz.setArt( get_artLabels(albumArt) )
+    #needed by play_track to play the song, added here to uniform api
+    liz.setPath(node.findtext("url"))
+    liz.setInfo( type="music", infoLabels=get_infolabels("songs", node) )
+    liz.setMimeType(node.findtext("mime"))
 
-    li.setLabel(unicode(node.findtext("title")))
-    art_labels = {
-            'banner' : albumArt, 
-            'thumb': albumArt, 
-            'icon': albumArt,
-            'fanart': albumArt
-            }
-    li.setArt( art_labels )
-#needed by play_track to play the song, added here to uniform api
-    li.setPath(node.findtext("url"))
-    
-    li.setInfo( type="music", infoLabels=get_infolabels("songs", node) )
-    li.setMimeType(node.findtext("mime"))
-    
 # Used to populate items for songs on XBMC. Calls plugin script with mode == 9 and object_id == (ampache song id)
 # TODO: Merge with addDir(). Same basic idea going on, this one adds links all at once, that one does it one at a time
 #       Also, some property things, some different context menu things.
@@ -136,7 +141,7 @@ def addSongLinks(elem):
     it=[]
     for node in elem.iter("song"):
         liz=xbmcgui.ListItem()
-        fillListItemWithSongInfo(liz, node)   
+        fillListItemWithSongInfo(liz,node)
         liz.setProperty("IsPlayable", "true")
 
         cm = []
@@ -193,16 +198,8 @@ def addDir(name,object_id,mode,iconImage=None,elem=None,infoLabels=None):
         infoLabels={ "Title": name }
     
     liz=xbmcgui.ListItem(name)
-
-    art_labels = {
-            'banner' : iconImage, 
-            'thumb': iconImage, 
-            'icon': iconImage,
-            'fanart': iconImage
-            }
-    
     liz.setInfo( type="Music", infoLabels=infoLabels )
-    liz.setArt( art_labels )
+    liz.setArt(  get_artLabels(iconImage) )
     liz.setProperty('IsPlayable', 'false')
 
     try:
@@ -422,16 +419,9 @@ def get_items(object_type, object_id=None, add=None,
                 allid.add(album_id)
             else:
                 continue
+            xbmc.log("DEBUG: object_type - " + str(object_type) , xbmc.LOGDEBUG )
             if useCacheArt:
-                imageUrl = node.findtext("art")
-                xbmc.log("DEBUG: object_type - " + str(object_type) , xbmc.LOGDEBUG )
-                xbmc.log("DEBUG: Art - " + str(image), xbmc.LOGDEBUG )
-                try:
-                    image = cacheArt(imageUrl)        
-                except NameError:
-                    image = "DefaultFolder.png"
-                else:
-                    xbmc.log("DEBUG: Art Filename: " + str(image), xbmc.LOGDEBUG )
+                image = get_art(node)
             addDir(fullname,node.attrib["id"],mode,image,node,infoLabels=get_infolabels("albums",node))
     elif object_type == 'artists':
         for node in elem.iter('artist'):
@@ -499,6 +489,7 @@ def get_all(object_type):
 
 def get_random(object_type):
     xbmc.log("DEBUG: object_type " + object_type, xbmc.LOGDEBUG)
+    image = "DefaultFolder.png"
     #object type can be : albums, artists, songs, playlists
     
     if object_type == 'albums':
@@ -525,18 +516,15 @@ def get_random(object_type):
                 fullname = node.findtext("name").encode("utf-8")
                 fullname += " - "
                 fullname += node.findtext("artist").encode("utf-8")
-                try:
-                    image = cacheArt(node.findtext("art"))
-                except NameError:
-                    image = "DefaultFolder.png"
+
+                image = get_art(node)
+
                 addDir(fullname,node.attrib["id"],3,image,node,infoLabels=get_infolabels(object_type,node))        
         elif object_type == 'artists':
-            image = "DefaultFolder.png"
             for node in elem.iter("artist"):
                 fullname = node.findtext("name").encode("utf-8")
                 addDir(fullname,node.attrib["id"],2,image,node,infoLabels=get_infolabels(object_type,node))        
         elif object_type == 'playlists':
-            image = "DefaultFolder.png"
             for node in elem.iter("playlist"):
                 fullname = node.findtext("name").encode("utf-8")
                 addDir(fullname,node.attrib["id"],14,image,node)        
