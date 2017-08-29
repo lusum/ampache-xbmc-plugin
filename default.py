@@ -412,7 +412,6 @@ def get_items(object_type, object_id=None, add=None,
         allid = set()
         for node in elem.iter('album'):
             #no unicode function, cause urllib quot_plus error ( bug )
-            fullname = node.findtext("name").encode("utf-8")
             album_id = int(node.attrib["id"])
             #remove duplicates in album names ( workaround for a problem in server comunication )
             if album_id not in allid:
@@ -422,7 +421,7 @@ def get_items(object_type, object_id=None, add=None,
             xbmc.log("DEBUG: object_type - " + str(object_type) , xbmc.LOGDEBUG )
             if useCacheArt:
                 image = get_art(node)
-            addDir(fullname,node.attrib["id"],mode,image,node,infoLabels=get_infolabels("albums",node))
+            addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node,infoLabels=get_infolabels("albums",node))
     elif object_type == 'artists':
         for node in elem.iter('artist'):
             addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node,infoLabels=get_infolabels("artists",node))
@@ -522,12 +521,10 @@ def get_random(object_type):
                 addDir(fullname,node.attrib["id"],3,image,node,infoLabels=get_infolabels(object_type,node))        
         elif object_type == 'artists':
             for node in elem.iter("artist"):
-                fullname = node.findtext("name").encode("utf-8")
-                addDir(fullname,node.attrib["id"],2,image,node,infoLabels=get_infolabels(object_type,node))        
+                addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],2,image,node,infoLabels=get_infolabels(object_type,node))
         elif object_type == 'playlists':
             for node in elem.iter("playlist"):
-                fullname = node.findtext("name").encode("utf-8")
-                addDir(fullname,node.attrib["id"],14,image,node)        
+                addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],14,image,node)
         elif object_type == 'songs':
             addSongLinks(elem)
 
