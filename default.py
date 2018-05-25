@@ -67,6 +67,13 @@ def cacheArt(url):
                         raise NameError
 			#return False
 
+#return album and artist name, only album could be confusing
+def get_album_artist_name(node):
+    fullname = node.findtext("name").encode("utf-8")
+    fullname += " - "
+    fullname += node.findtext("artist").encode("utf-8")
+    return fullname
+
 def get_artLabels(albumArt):
     art_labels = {
             'banner' : albumArt, 
@@ -419,9 +426,10 @@ def get_items(object_type, object_id=None, add=None,
             else:
                 continue
             xbmc.log("DEBUG: object_type - " + str(object_type) , xbmc.LOGDEBUG )
+            fullname = get_album_artist_name(node)
             if useCacheArt:
                 image = get_art(node)
-            addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node,infoLabels=get_infolabels("albums",node))
+            addDir(fullname,node.attrib["id"],mode,image,node,infoLabels=get_infolabels("albums",node))
     elif object_type == 'artists':
         for node in elem.iter('artist'):
             addDir(node.findtext("name").encode("utf-8"),node.attrib["id"],mode,image,node,infoLabels=get_infolabels("artists",node))
@@ -512,9 +520,7 @@ def get_random(object_type):
         if object_type == 'albums':
             for node in elem.iter("album"):
                 #same urllib bug
-                fullname = node.findtext("name").encode("utf-8")
-                fullname += " - "
-                fullname += node.findtext("artist").encode("utf-8")
+                fullname = get_album_artist_name(node)
 
                 image = get_art(node)
 
@@ -647,6 +653,7 @@ elif mode==6:
 elif mode==7:
     addDir("Random Artists...",99999,8,"DefaultFolder.png")
     addDir("Random Albums...",99998,8,"DefaultFolder.png")
+    addDir("Random Albums ( server side )...",99995,8)
     addDir("Random Songs...",99997,8,"DefaultFolder.png")
     addDir("Random Playlists...",99996,8,"DefaultFolder.png")
 
@@ -670,6 +677,10 @@ elif mode==8:
     if object_id == 99996:
         addDir("Refresh..",99996,8,os.path.join(imagepath, 'refresh_icon.png'))
         get_random('playlists')
+    if object_id == 99995:
+        addDir("Refresh..",99995,8,os.path.join(imagepath, 'refresh_icon.png'))
+        items = (int(ampache.getSetting("random_albums"))*3)+3
+        get_items(object_type="albums",object_subtype="random",limit=items)
 
 #   play track mode  ( mode set in add_links function )
 
@@ -765,7 +776,6 @@ elif mode==23:
     addDir("Hightest Rated Albums...",99999,24)
     addDir("Frequent Albums...",99999,25)
     addDir("Flagged Albums...",99999,26)
-    addDir("Random Albums ( server side )...",99999,27)
 
 elif mode==24:
     items = (int(ampache.getSetting("random_albums"))*3)+3
@@ -778,11 +788,6 @@ elif mode==25:
 elif mode==26:
     items = (int(ampache.getSetting("random_albums"))*3)+3
     get_items(object_type="albums",object_subtype="flagged",limit=items)
-
-elif mode==27:
-    addDir("Refresh..",99999,27,os.path.join(imagepath, 'refresh_icon.png'))
-    items = (int(ampache.getSetting("random_albums"))*3)+3
-    get_items(object_type="albums",object_subtype="random",limit=items)
 
 if mode < 30:
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
