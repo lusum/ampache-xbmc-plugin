@@ -278,17 +278,12 @@ def get_params():
     return param
     
 def getFilterFromUser():
-    loop = True
-    while(loop):
-        kb = xbmc.Keyboard('', '', True)
-        kb.setHeading('Enter Search Filter')
-        kb.setHiddenInput(False)
-        kb.doModal()
-        if (kb.isConfirmed()):
-            filter = kb.getText()
-            loop = False
-        else:
-            return(False)
+    kb =  xbmcgui.Dialog()
+    result = kb.input('', type=xbmcgui.INPUT_ALPHANUM)
+    if result:
+        filter = result
+    else:
+        return False
     return(filter)
 
 def get_user_pwd_login_url(nTime):
