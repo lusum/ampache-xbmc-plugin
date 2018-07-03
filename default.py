@@ -38,13 +38,13 @@ def cacheArt(url):
         pathPng = os.path.join( cacheDir , imageNamePng )
         pathJpg = os.path.join( cacheDir , imageNameJpg )
 	if os.path.exists( pathPng ):
-                xbmc.log("DEBUG: png cached",xbmc.LOGDEBUG)
+                xbmc.log("AmpachePlugin::CacheArt: png cached",xbmc.LOGDEBUG)
 		return pathPng
         elif os.path.exists( pathJpg ):
-                xbmc.log("DEBUG: jpg cached",xbmc.LOGDEBUG)
+                xbmc.log("AmpachePlugin::CacheArt: jpg cached",xbmc.LOGDEBUG)
 		return pathJpg
 	else:
-                xbmc.log("DEBUG: File needs fetching ",xbmc.LOGDEBUG)
+                xbmc.log("AmpachePlugin::CacheArt: File needs fetching ",xbmc.LOGDEBUG)
                 ssl_certs_str = ampache.getSetting("disable_ssl_certs")
                 if str_to_bool(ssl_certs_str):
                     context = ssl._create_unverified_context()
@@ -60,10 +60,10 @@ def cacheArt(url):
 				fname = imageID.group(1) + '.' + tmpExt[1]
                         pathJpg = os.path.join( cacheDir , fname )
 			open( pathJpg, 'wb').write(opener.read())
-                        xbmc.log("DEBUG: Cached " + str(fname), xbmc.LOGDEBUG )
+                        xbmc.log("AmpachePlugin::CacheArt: Cached " + str(fname), xbmc.LOGDEBUG )
 			return pathJpg
 		else:
-                        xbmc.log("DEBUG: It didnt work", xbmc.LOGDEBUG )
+                        xbmc.log("AmpachePlugin::CacheArt: It didnt work", xbmc.LOGDEBUG )
                         raise NameError
 			#return False
 
@@ -88,7 +88,7 @@ def get_art(node):
         albumArt = cacheArt(node.findtext("art"))
     except NameError:
         albumArt = "DefaultFolder.png"
-    xbmc.log("DEBUG: albumArt - " + str(albumArt), xbmc.LOGDEBUG )
+    xbmc.log("AmpachePlugin::get_art: albumArt - " + str(albumArt), xbmc.LOGDEBUG )
     return albumArt
 
 def get_infolabels(object_type , node):
@@ -179,7 +179,9 @@ def addSongLinks(elem):
         url = sys.argv[0] + '?' + urllib.urlencode(track_parameters)
         tu= (url,liz)
         it.append(tu)
+    
     ok=xbmcplugin.addDirectoryItems(handle=int(sys.argv[1]),items=it,totalItems=len(elem))
+    xbmc.log("AmpachePlugin::addSongLinks " + str(ok), xbmc.LOGDEBUG)
     return ok
 
 # The function that actually plays an Ampache URL by using setResolvedUrl. Gotta have the extra step in order to make
@@ -198,6 +200,7 @@ def play_track(id):
 
 # Main function for adding xbmc plugin elements
 def addDir(name,object_id,mode,iconImage=None,elem=None,infoLabels=None):
+    xbmc.log("AmpachePlugin::addDir name " + name, xbmc.LOGDEBUG)
     if iconImage == None:
         iconImage = "DefaultFolder.png"
     
@@ -219,10 +222,13 @@ def addDir(name,object_id,mode,iconImage=None,elem=None,infoLabels=None):
         pass
 
     u=sys.argv[0]+"?object_id="+str(object_id)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name)
+    xbmc.log("AmpachePlugin::addDir u " + u, xbmc.LOGDEBUG)
     ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=True)
+    xbmc.log("AmpachePlugin::addDir " + str(ok), xbmc.LOGDEBUG)
     return ok
 
 def get_params():
+    xbmc.log("AmpachePlugin::get_params " + sys.argv[2], xbmc.LOGDEBUG)
     param=[]
     paramstring=sys.argv[2]
     if len(paramstring)>=2:
@@ -288,10 +294,10 @@ def AMPACHECONNECT():
     if str_to_bool(ssl_certs_str):
         gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
         response = urllib2.urlopen(req, context=gcontext, timeout=100)
-        xbmc.log("DEBUG: ssl",xbmc.LOGDEBUG)
+        xbmc.log("AmpachePlugin::AmpacheConnect: ssl",xbmc.LOGDEBUG)
     else:
         response = urllib2.urlopen(req, timeout=100)
-        xbmc.log("DEBUG: nossl",xbmc.LOGDEBUG)
+        xbmc.log("AmpachePlugin::AmpacheConnect: nossl",xbmc.LOGDEBUG)
     tree=ET.parse(response)
     response.close()
     elem = tree.getroot()
@@ -316,7 +322,7 @@ def ampache_http_request(action,add=None, filter=None, limit=5000,
     #remove bug & it is not allowed as text in tags
     
     #code useful for debugging/parser needed
-    xbmc.log("DEBUG: contents " + contents, xbmc.LOGDEBUG)
+    xbmc.log("AmpachePlugin::ampache_http_request: contents " + contents, xbmc.LOGDEBUG)
     #parser = ET.XMLParser(recover=True)
     #tree=ET.XML(contents, parser = parser)
     tree=ET.XML(contents)
@@ -346,9 +352,9 @@ def get_items(object_type, object_id=None, add=None,
     amtype = None
 
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
-    xbmc.log("DEBUG: object_type " + object_type, xbmc.LOGDEBUG)
+    xbmc.log("AmpachePlugin::get_items: object_type " + object_type, xbmc.LOGDEBUG)
     if object_subtype:
-        xbmc.log("DEBUG: object_subtype " + object_subtype, xbmc.LOGDEBUG)
+        xbmc.log("AmpachePlugin::get_items: object_subtype " + object_subtype, xbmc.LOGDEBUG)
 
     #default: object_type is the action,otherwise see the if list below
     action = object_type
@@ -425,7 +431,7 @@ def get_items(object_type, object_id=None, add=None,
                 allid.add(album_id)
             else:
                 continue
-            xbmc.log("DEBUG: object_type - " + str(object_type) , xbmc.LOGDEBUG )
+            xbmc.log("AmpachePlugin::get_items: object_type - " + str(object_type) , xbmc.LOGDEBUG )
             fullname = get_album_artist_name(node)
             if useCacheArt:
                 image = get_art(node)
@@ -495,7 +501,7 @@ def get_all(object_type):
     get_items(object_type=object_type, limit=limit, useCacheArt=False)
 
 def get_random(object_type):
-    xbmc.log("DEBUG: object_type " + object_type, xbmc.LOGDEBUG)
+    xbmc.log("AmpachePlugin::get_random: object_type " + object_type, xbmc.LOGDEBUG)
     image = "DefaultFolder.png"
     #object type can be : albums, artists, songs, playlists
     
@@ -511,9 +517,9 @@ def get_random(object_type):
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
     elem = AMPACHECONNECT()
     items = int(elem.findtext(object_type))
-    xbmc.log("DEBUG: items " + str(items), xbmc.LOGDEBUG )
+    xbmc.log("AmpachePlugin::get_random: total items in the catalog " + str(items), xbmc.LOGDEBUG )
     random_items = (int(ampache.getSetting(settings))*3)+3
-    xbmc.log("DEBUG: random_items " + str(random_items), xbmc.LOGDEBUG )
+    xbmc.log("AmpachePlugin::get_random: random_items " + str(random_items), xbmc.LOGDEBUG )
     seq = random.sample(xrange(items),random_items)
     for item_id in seq:
         elem = ampache_http_request(object_type,offset=item_id,limit=1)
@@ -543,22 +549,22 @@ win_id=None
 
 try:
         name=urllib.unquote_plus(params["name"])
-        xbmc.log("DEBUG: name " + name, xbmc.LOGDEBUG)
+        xbmc.log("AmpachePlugin::name " + name, xbmc.LOGDEBUG)
 except:
         pass
 try:
         mode=int(params["mode"])
-        xbmc.log("DEBUG: mode " + str(mode), xbmc.LOGDEBUG)
+        xbmc.log("AmpachePlugin::mode " + str(mode), xbmc.LOGDEBUG)
 except:
         pass
 try:
         object_id=int(params["object_id"])
-        xbmc.log("DEBUG: object_id " + str(object_id), xbmc.LOGDEBUG)
+        xbmc.log("AmpachePlugin::object_id " + str(object_id), xbmc.LOGDEBUG)
 except:
         pass
 try:
         win_id=int(params["win_id"])
-        xbmc.log("DEBUG: win_id " + str(win_id), xbmc.LOGDEBUG)
+        xbmc.log("AmpachePlugin::win_id " + str(win_id), xbmc.LOGDEBUG)
 except:
         pass
 
