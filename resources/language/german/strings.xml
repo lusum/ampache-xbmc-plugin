@@ -4,7 +4,7 @@
     <string id="30002">Passwort</string>
 	  <string id="30003">Benutze API Key anstatt Benutzername/Passwort</string>
     <string id="30004">API Key</string>
-    <string id="30006">Anzahl zufälliger Alben</string>
+    <string id="30005">Anzahl zufälliger Alben</string>
     <string id="30009">Token</string>
 		<string id="30010">	Token Ablaufdatum</string>
 </strings>
