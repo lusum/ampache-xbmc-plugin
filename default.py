@@ -505,19 +505,15 @@ def get_all(object_type):
 def get_random(object_type):
     xbmc.log("AmpachePlugin::get_random: object_type " + object_type, xbmc.LOGDEBUG)
     mode = None
+    settings = "random_items"
     #object type can be : albums, artists, songs, playlists
     
     if object_type == 'albums':
         mode = 3
-        settings = "random_albums"
     elif object_type == 'artists':
         mode = 2
-        settings = "random_artists"
     elif object_type == 'playlists':
         mode = 14
-        settings = "random_playlists"
-    elif object_type == 'songs':
-        settings = "random_songs"
 
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
     elem = AMPACHECONNECT()
@@ -596,7 +592,7 @@ elif mode==1:
 #   screen ( mode 4 ) and recent ( mode 5 )  )
 
 elif mode==2:
-    num_items = (int(ampache.getSetting("random_albums"))*3)+3
+    num_items = (int(ampache.getSetting("random_items"))*3)+3
     if object_id == 9999999:
         do_search("albums")
     elif object_id > 9999994 and object_id < 9999999:
