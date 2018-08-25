@@ -95,8 +95,8 @@ def get_infolabels(object_type , node):
     infoLabels = None
     if object_type == 'albums':
         infoLabels = {
-            'Title' : unicode(node.findtext("title")) ,
-            'Album' : unicode(node.findtext("title")) ,
+            'Title' : unicode(node.findtext("name")) ,
+            'Album' : unicode(node.findtext("name")) ,
             'Artist' : unicode(node.findtext("artist")),
             'Discnumber' : unicode(node.findtext("disk")),
             'Year' : node.findtext("year") ,
@@ -107,8 +107,8 @@ def get_infolabels(object_type , node):
     elif object_type == 'artists':
         
         infoLabels = {
-            'Title' : unicode(node.findtext("title")) ,
-            'Artist' : unicode(node.findtext("title")),
+            'Title' : unicode(node.findtext("name")) ,
+            'Artist' : unicode(node.findtext("name")),
             'Rating' : node.findtext("preciserating"),
             'Mediatype' : 'artist'
         }
