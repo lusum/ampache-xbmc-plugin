@@ -32,6 +32,8 @@ def str_to_bool(s):
 def cacheArt(url):
 	strippedAuth = url.split('&')
 	imageID = re.search(r"id=(\d+)", strippedAuth[0])
+        if imageID == None:
+            raise NameError
         
         imageNamePng = imageID.group(1) + ".png"
         imageNameJpg = imageID.group(1) + ".jpg"
