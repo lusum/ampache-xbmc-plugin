@@ -3,6 +3,7 @@ CHANGELOG
 
 0.8.0.1
 ----------
+* Nextcloud ampache server supported
 * Various bugfixes
 
 0.8.0
