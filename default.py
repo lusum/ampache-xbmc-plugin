@@ -32,6 +32,8 @@ def str_to_bool(s):
 def cacheArt(url):
 	strippedAuth = url.split('&')
 	imageID = re.search(r"id=(\d+)", strippedAuth[0])
+        #security check:
+        #also nexcloud server doesn't send images
         if imageID == None:
             raise NameError
         
@@ -522,8 +524,11 @@ def get_random(object_type):
     items = int(elem.findtext(object_type))
     xbmc.log("AmpachePlugin::get_random: total items in the catalog " + str(items), xbmc.LOGDEBUG )
     random_items = (int(ampache.getSetting(settings))*3)+3
+    if random_items > items:
+        random_items = items
     xbmc.log("AmpachePlugin::get_random: random_items " + str(random_items), xbmc.LOGDEBUG )
     seq = random.sample(xrange(items),random_items)
+    xbmc.log("AmpachePlugin::get_random: seq " + str(seq), xbmc.LOGDEBUG )
     elements = []
     for item_id in seq:
         elem = ampache_http_request(object_type,offset=item_id,limit=1)
