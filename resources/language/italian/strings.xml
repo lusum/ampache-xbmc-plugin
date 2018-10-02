@@ -2,7 +2,7 @@
     <string id="30000">Url del server Ampache</string>
     <string id="30001">Nome utente</string>
     <string id="30002">Password</string>
-		<string id="30003">Usa la chiave api invece di nome utente/password</string>
+    <string id="30003">Usa la chiave api invece di nome utente/password</string>
     <string id="30004">Chiave api</string>
     <string id="30005">Numero di oggetti ( casuali e statistiche )</string>
     <string id="30009">Token</string>
