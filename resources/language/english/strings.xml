@@ -4,7 +4,7 @@
     <string id="30002">Password</string>
     <string id="30003">Use api key instead of username/password</string>
     <string id="30004">Api key</string>
-		<string id="30005">Number of items ( random and stats )</string>
+    <string id="30005">Number of items ( random and stats )</string>
     <string id="30009">Token</string>
     <string id="30010">Token expiration</string>
     <string id="30011">Disable SSL certificate verification ( DANGEROUS )</string>
