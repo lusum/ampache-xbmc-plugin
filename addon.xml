@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<addon id="plugin.audio.ampache" version="0.8.0.1" name="Ampache" provider-name="lusum">
+<addon id="plugin.audio.ampache" version="0.8.0.2" name="Ampache" provider-name="lusum">
   <extension point="xbmc.python.pluginsource" library="default.py">
     <provides>audio</provides>
   </extension>
@@ -7,7 +7,7 @@
   <extension point="xbmc.addon.metadata">
     <summary lang="en">Stream music from Ampache XML-API</summary>
     <summary lang="de">Streame Musik von der Ampache XML-API</summary>
-    <summary lang="it">Streaming Musicale la XML-API di Ampache</summary>
+    <summary lang="it">Streaming Musicale l'XML-API di Ampache</summary>
     <description lang="en">ampache</description>
     <description lang="de">ampache</description>
     <description lang="it">ampache</description>
