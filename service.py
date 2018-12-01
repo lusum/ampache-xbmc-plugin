@@ -13,7 +13,8 @@ if __name__ == '__main__':
 
     #clean cache on start
     for currentFile in os.listdir(cacheDir):
-        print "processing file: " + str(currentFile)
-        if any(currentFile.endswith(ext) for ext in extensions):
+        xbmc.log("Clear Cache Art " + str(currentFile),xbmc.LOGDEBUG)
+        #not elegant but it should works
+        if( str(currentFile) != "README.md"):
             pathDel = os.path.join( cacheDir, currentFile)
             os.remove(pathDel)
