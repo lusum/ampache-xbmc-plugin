@@ -7,8 +7,10 @@
   <extension point="xbmc.addon.metadata">
     <summary lang="en">Stream music from Ampache XML-API</summary>
     <summary lang="de">Streame Musik von der Ampache XML-API</summary>
+    <summary lang="it">Streaming Musicale la XML-API di Ampache</summary>
     <description lang="en">ampache</description>
     <description lang="de">ampache</description>
+    <description lang="it">ampache</description>
     <platform>all</platform>
   </extension>
 </addon>
