@@ -176,6 +176,15 @@ def addSongLinks(elem):
                 sys.argv[0],album_id, curr_win_id ) ) )
         except:
             pass
+        
+        try:
+            song_elem = node.find("song")
+            song_title = unicode(node.findtext("title"))
+            cm.append( ( "Search all songs with this title",
+            "XBMC.Container.Update(%s?title=%s&mode=17&win_id=%s)" % (
+                sys.argv[0],song_title, curr_win_id ) ) )
+        except:
+            pass
 
         if cm != []:
             liz.addContextMenuItems(cm)
@@ -482,8 +491,9 @@ def get_time(time_offset):
     nd = d + dt
     return nd.isoformat()
 
-def do_search(object_type,object_subtype=None):
-    thisFilter = getFilterFromUser()
+def do_search(object_type,object_subtype=None,thisFilter=None):
+    if not thisFilter:
+        thisFilter = getFilterFromUser()
     if thisFilter:
         get_items(object_type=object_type,filter=thisFilter,object_subtype=object_subtype)
 
@@ -542,6 +552,7 @@ name=None
 mode=None
 object_id=None
 win_id=None
+title=None
 
 try:
         name=urllib.unquote_plus(params["name"])
@@ -563,6 +574,13 @@ try:
         xbmc.log("AmpachePlugin::win_id " + str(win_id), xbmc.LOGDEBUG)
 except:
         pass
+try:
+        title=urllib.unquote_plus(params["title"])
+        xbmc.log("AmpachePlugin::title " + title, xbmc.LOGDEBUG)
+except:
+        pass
+
+
 
 
 if mode==None:
@@ -753,6 +771,11 @@ elif mode==16:
     if xbmc.getCondVisibility("Window.IsActive(musicplaylist)"):
         xbmc.executebuiltin("XBMC.ActivateWindow(%s)" % (win_id,))
     get_items(object_type="albums",object_id=object_id,object_subtype="album")
+
+elif mode==17:
+    if xbmc.getCondVisibility("Window.IsActive(musicplaylist)"):
+        xbmc.executebuiltin("XBMC.ActivateWindow(%s)" % (win_id,))
+    do_search("songs",thisFilter=title)
 
 elif mode==18:
     addDir("Artist tags...",object_id,19)
