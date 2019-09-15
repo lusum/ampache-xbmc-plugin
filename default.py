@@ -49,12 +49,7 @@ def cacheArt(url):
 		return pathJpg
 	else:
                 xbmc.log("AmpachePlugin::CacheArt: File needs fetching ",xbmc.LOGDEBUG)
-                ssl_certs_str = ampache.getSetting("disable_ssl_certs")
-                if str_to_bool(ssl_certs_str):
-                    context = ssl._create_unverified_context()
-                    opener = urllib2.urlopen(url, context=context, timeout=100)
-                else:
-                    opener = urllib2.urlopen(url, timeout = 100)
+                opener = handle_request(url)
 		if opener.headers.maintype == 'image':
 			extension = opener.headers['content-type']
 			tmpExt = extension.split("/")
@@ -65,9 +60,11 @@ def cacheArt(url):
                         pathJpg = os.path.join( cacheDir , fname )
 			open( pathJpg, 'wb').write(opener.read())
                         xbmc.log("AmpachePlugin::CacheArt: Cached " + str(fname), xbmc.LOGDEBUG )
+                        opener.close()
 			return pathJpg
 		else:
                         xbmc.log("AmpachePlugin::CacheArt: It didnt work", xbmc.LOGDEBUG )
+                        opener.close()
                         raise NameError
 			#return False
 
@@ -207,7 +204,10 @@ def addSongLinks(elem):
 # playing of that item.
 def play_track(id):
     ''' Start to stream the track with the given id. '''
-    elem = ampache_http_request("song",filter=id)
+    try:
+        elem = ampache_http_request("song",filter=id)
+    except:
+        return
     for thisnode in elem:
         node = thisnode
     liz = xbmcgui.ListItem()
@@ -238,9 +238,9 @@ def addDir(name,object_id,mode,iconImage=None,elem=None,infoLabels=None):
         pass
 
     u=sys.argv[0]+"?object_id="+str(object_id)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name)
-    xbmc.log("AmpachePlugin::addDir u " + u, xbmc.LOGDEBUG)
+    xbmc.log("AmpachePlugin::addDir url " + u, xbmc.LOGDEBUG)
     ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=True)
-    xbmc.log("AmpachePlugin::addDir " + str(ok), xbmc.LOGDEBUG)
+    xbmc.log("AmpachePlugin::addDir ok " + str(ok), xbmc.LOGDEBUG)
     return ok
 
 #catch all function to add items to the directory using the low level addDir
@@ -322,6 +322,24 @@ def get_auth_key_login_url():
     myURL += '&version=350001'
     return myURL
 
+def handle_request(url):
+    try:
+        xbmc.log(url,xbmc.LOGNOTICE)
+        req = urllib2.Request(url)
+        ssl_certs_str = ampache.getSetting("disable_ssl_certs")
+        if str_to_bool(ssl_certs_str):
+            gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+            response = urllib2.urlopen(req, context=gcontext, timeout=400)
+            xbmc.log("AmpachePlugin::AmpacheConnect: ssl",xbmc.LOGDEBUG)
+        else:
+            response = urllib2.urlopen(req, timeout=400)
+            xbmc.log("AmpachePlugin::AmpacheConnect: nossl",xbmc.LOGDEBUG)
+    except:
+        xbmc.log("AmpachePlugin::ConnectionError",xbmc.LOGDEBUG)
+        xbmc.executebuiltin("ConnectionError" )
+        raise ConnectionError
+    return response
+
 def AMPACHECONNECT():
     socket.setdefaulttimeout(3600)
     nTime = int(time.time())
@@ -330,16 +348,10 @@ def AMPACHECONNECT():
         myURL = get_auth_key_login_url() 
     else: 
         myURL = get_user_pwd_login_url(nTime)
-    xbmc.log(myURL,xbmc.LOGNOTICE)
-    req = urllib2.Request(myURL)
-    ssl_certs_str = ampache.getSetting("disable_ssl_certs")
-    if str_to_bool(ssl_certs_str):
-        gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-        response = urllib2.urlopen(req, context=gcontext, timeout=100)
-        xbmc.log("AmpachePlugin::AmpacheConnect: ssl",xbmc.LOGDEBUG)
-    else:
-        response = urllib2.urlopen(req, timeout=100)
-        xbmc.log("AmpachePlugin::AmpacheConnect: nossl",xbmc.LOGDEBUG)
+    try:
+        response = handle_request(myURL)
+    except ConnectionError:
+        raise ConnectionError
     tree=ET.parse(response)
     response.close()
     elem = tree.getroot()
@@ -351,14 +363,10 @@ def AMPACHECONNECT():
 def ampache_http_request(action,add=None, filter=None, limit=5000,
         offset=0,amtype=None, exact=None):
     thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset,amtype=amtype, exact=exact)
-    xbmc.log("URL " + thisURL, xbmc.LOGNOTICE)
-    req = urllib2.Request(thisURL)
-    ssl_certs_str = ampache.getSetting("disable_ssl_certs")
-    if str_to_bool(ssl_certs_str):
-        gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-        response = urllib2.urlopen(req, context=gcontext, timeout=400)
-    else:
-        response = urllib2.urlopen(req, timeout=400)
+    try:
+        response = handle_request(thisURL)
+    except ConnectionError:
+        raise ConnectionError
     contents = response.read()
     contents = contents.replace("\0", "")
     #remove bug & it is not allowed as text in tags
@@ -372,15 +380,15 @@ def ampache_http_request(action,add=None, filter=None, limit=5000,
     if tree.findtext("error"):
         errornode = tree.find("error")
         if errornode.attrib["code"]=="401":
-            tree = AMPACHECONNECT()
+            try:
+                tree = AMPACHECONNECT()
+            except ConnectionError:
+                raise ConnectionError
             thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset,amtype=amtype,exact=exact)
-            req = urllib2.Request(thisURL)
-            ssl_certs_str = ampache.getSetting("disable_ssl_certs")
-            if str_to_bool(ssl_certs_str):
-                gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-                response = urllib2.urlopen(req, context=gcontext, timeout=100)
-            else:
-                response = urllib2.urlopen(req, timeout=100)
+            try:
+                response = handle_request(thisURL)
+            except ConnectionError:
+                raise ConnectionError
             contents = response.read()
             tree=ET.XML(contents)
             response.close()
@@ -442,9 +450,12 @@ def get_items(object_type, object_id=None, add=None,
 
     if object_id:
         filter = object_id
-
-    elem = ampache_http_request(action,add=add,filter=filter, limit=limit,
+    
+    try:
+        elem = ampache_http_request(action,add=add,filter=filter, limit=limit,
             amtype=amtype, exact=exact)
+    except:
+        return
 
     #after the request, set the mode 
 
@@ -468,7 +479,10 @@ def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0,amtype=Non
     tokenexp = int(ampache.getSetting('token-exp'))
     if int(time.time()) > tokenexp:
         xbmc.log("refreshing token...", xbmc.LOGNOTICE )
-        elem = AMPACHECONNECT()
+        try:
+            elem = AMPACHECONNECT()
+        except:
+            return
 
     token=ampache.getSetting('token')    
     thisURL = ampache.getSetting("server") + '/server/xml.server.php?action=' + action 
@@ -499,7 +513,10 @@ def do_search(object_type,object_subtype=None,thisFilter=None):
 
 def get_recent(object_type,object_id,object_subtype=None):   
     if object_id == 9999998:
-        elem = AMPACHECONNECT()
+        try:
+            elem = AMPACHECONNECT()
+        except:
+            return
         update = elem.findtext("add")        
         xbmc.log(update[:10],xbmc.LOGNOTICE)
         get_items(object_type=object_type,add=update[:10],object_subtype=object_subtype)
@@ -512,7 +529,10 @@ def get_recent(object_type,object_id,object_subtype=None):
 
 #get rid of this function in the near future and use simply get_items with limit = None
 def get_all(object_type):
-    elem = AMPACHECONNECT()
+    try:
+        elem = AMPACHECONNECT()
+    except:
+        return
     limit=int(elem.findtext(object_type))
     get_items(object_type=object_type, limit=limit, useCacheArt=False)
 
@@ -530,7 +550,10 @@ def get_random(object_type):
         mode = 14
 
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
-    elem = AMPACHECONNECT()
+    try:
+        elem = AMPACHECONNECT()
+    except:
+        return
     items = int(elem.findtext(object_type))
     xbmc.log("AmpachePlugin::get_random: total items in the catalog " + str(items), xbmc.LOGDEBUG )
     random_items = (int(ampache.getSetting(settings))*3)+3
@@ -541,11 +564,15 @@ def get_random(object_type):
     xbmc.log("AmpachePlugin::get_random: seq " + str(seq), xbmc.LOGDEBUG )
     elements = []
     for item_id in seq:
-        elem = ampache_http_request(object_type,offset=item_id,limit=1)
-        elements.append(elem)
+        try:
+            elem = ampache_http_request(object_type,offset=item_id,limit=1)
+            elements.append(elem)
+        except:
+            pass
    
     for el in elements:
         addItem( object_type, mode , el)
+
 
 params=get_params()
 name=None
@@ -582,9 +609,11 @@ except:
 
 
 
-
 if mode==None:
-    elem = AMPACHECONNECT()
+    try:
+        elem = AMPACHECONNECT()
+    except:
+        elem = ET.Element("")
     addDir("Search...",0,4,"DefaultFolder.png")
     addDir("Recent...",0,5,"DefaultFolder.png")
     addDir("Random...",0,7,"DefaultFolder.png")
@@ -812,5 +841,5 @@ elif mode==23:
     addDir("Flagged Albums...",9999992,2)
 
 if mode < 30:
-    xbmc.log("AmpachePlugin::endOfDirectory", xbmc.LOGDEBUG)
+    xbmc.log("AmpachePlugin::endOfDirectory " + sys.argv[1],  xbmc.LOGDEBUG)
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
