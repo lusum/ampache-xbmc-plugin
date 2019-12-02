@@ -313,13 +313,13 @@ def get_user_pwd_login_url(nTime):
     myPassphrase = hasher.hexdigest()
     myURL = ampache.getSetting("server") + '/server/xml.server.php?action=handshake&auth='
     myURL += myPassphrase + "&timestamp=" + myTimeStamp
-    myURL += '&version=350001&user=' + ampache.getSetting("username")
+    myURL += '&version=' + str(ampache.getSetting("api-version")) + '&user=' + ampache.getSetting("username")
     return myURL
 
 def get_auth_key_login_url():
     myURL = ampache.getSetting("server") + '/server/xml.server.php?action=handshake&auth='
     myURL += ampache.getSetting("api_key")
-    myURL += '&version=350001'
+    myURL += '&version=' + str(ampache.getSetting("api-version"))
     return myURL
 
 def handle_request(url):
@@ -356,13 +356,21 @@ def AMPACHECONNECT():
     response.close()
     elem = tree.getroot()
     token = elem.findtext('auth')
+    version = elem.findtext('api')
+    ampache.setSetting("api-version", int(version))
+    total_artists = str(elem.findtext("artists"))
+    ampache.setSetting('total_artists',total_artists)
+    total_albums = str(elem.findtext("albums"))
+    ampache.setSetting('total_albums',total_albums)
+    total_playlists = str(elem.findtext("playlists"))
+    ampache.setSetting('total_playlists',total_playlists)
     ampache.setSetting('token',token)
     ampache.setSetting('token-exp',str(nTime+24000))
     return elem
 
 def ampache_http_request(action,add=None, filter=None, limit=5000,
-        offset=0,amtype=None, exact=None):
-    thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset,amtype=amtype, exact=exact)
+        offset=0,amtype=None, exact=None, obtype=None):
+    thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset,amtype=amtype,exact=exact, obtype=obtype)
     try:
         response = handle_request(thisURL)
     except ConnectionError:
@@ -399,6 +407,7 @@ def get_items(object_type, object_id=None, add=None,
     
     amtype = None
     mode = None
+    obtype = None
 
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
     xbmc.log("AmpachePlugin::get_items: object_type " + object_type, xbmc.LOGDEBUG)
@@ -421,16 +430,31 @@ def get_items(object_type, object_id=None, add=None,
         #stats management 
         elif object_subtype == 'hightest':
             action = 'stats'
-            amtype = object_subtype
+            if(ampache.getSetting("api-version")) > 400001:
+                obtype = 'album'
+                filter = 'hightest'
+            else:
+                amtype = object_subtype
         elif object_subtype == 'frequent':
             action = 'stats'
-            amtype = object_subtype
+            if(ampache.getSetting("api-version")) > 400001:
+                obtype = 'album'
+                filter = 'frequent'
+            else:
+                amtype = object_subtype
         elif object_subtype == 'flagged':
             action = 'stats'
-            amtype = object_subtype
+            if(ampache.getSetting("api-version")) > 400001:
+                obtype = 'album'
+                filter = 'flagged'
+            else:
+                amtype = object_subtype
         elif object_subtype == 'random':
-            action = 'stats'
-            amtype = object_subtype
+            if(ampache.getSetting("api-version")) > 400001:
+                obtype = 'album'
+                filter = 'random'
+            else:
+                amtype = object_subtype
     elif object_type == 'artists':
         if object_subtype == 'tag_artists':
             action = 'tag_artists'
@@ -453,7 +477,7 @@ def get_items(object_type, object_id=None, add=None,
     
     try:
         elem = ampache_http_request(action,add=add,filter=filter, limit=limit,
-            amtype=amtype, exact=exact)
+            amtype=amtype, exact=exact, obtype=obtype)
     except:
         return
 
@@ -475,7 +499,8 @@ def get_items(object_type, object_id=None, add=None,
 
     addItem( object_type, mode , elem, useCacheArt)
 
-def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0,amtype=None,exact=None):
+def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0,amtype=None,exact=None,
+        obtype=None):
     tokenexp = int(ampache.getSetting('token-exp'))
     if int(time.time()) > tokenexp:
         xbmc.log("refreshing token...", xbmc.LOGNOTICE )
@@ -489,6 +514,8 @@ def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0,amtype=Non
     thisURL += '&auth=' + token
     thisURL += '&limit=' +str(limit)
     thisURL += '&offset=' +str(offset)
+    if obtype:
+        thisURL += '&type=' + obtype
     if filter:
         thisURL += '&filter=' +urllib.quote_plus(str(filter))
     if add:
@@ -618,9 +645,9 @@ if mode==None:
     addDir("Recent...",0,5,"DefaultFolder.png")
     addDir("Random...",0,7,"DefaultFolder.png")
     addDir("Various...",0,23,"DefaultFolder.png")
-    addDir("Artists (" + str(elem.findtext("artists")) + ")",None,1,"DefaultFolder.png")
-    addDir("Albums (" + str(elem.findtext("albums")) + ")",None,2,"DefaultFolder.png")
-    addDir("Playlists (" + str(elem.findtext("playlists")) + ")",None,13,"DefaultFolder.png")
+    addDir("Artists (" + ampache.getSetting("total_artists")+ ")",None,1,"DefaultFolder.png")
+    addDir("Albums (" + ampache.getSetting("total_albums") + ")",None,2,"DefaultFolder.png")
+    addDir("Playlists (" + ampache.getSetting("total_playlists") + ")",None,13,"DefaultFolder.png")
     addDir("Tags",None,18,"DefaultFolder.png")
 
 #   artist list ( called from main screen  ( mode None ) , search
@@ -636,7 +663,7 @@ elif mode==1:
         get_recent( "artists", object_id )
     elif object_id == 9999994:
         #removed cause nasty recursive call using some commands in web interface
-        #addDir("Refresh..",9999994,2,os.path.join(imagepath, 'refresh_icon.png'))
+        #addDir("Refresh..",9999994,2,os.path.join(imagepath, 'refresh_icon.'))
         get_random('artists')
     #all artists list
     else:
