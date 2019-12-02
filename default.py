@@ -367,6 +367,7 @@ def AMPACHECONNECT():
     ampache.setSetting('songs',total_songs)
     total_playlists = elem.findtext("playlists")
     ampache.setSetting('playlists',total_playlists)
+    ampache.setSetting('add',elem.findtext("add"))
     ampache.setSetting('token',token)
     ampache.setSetting('token-exp',str(nTime+24000))
     return elem
@@ -536,11 +537,7 @@ def do_search(object_type,object_subtype=None,thisFilter=None):
 
 def get_recent(object_type,object_id,object_subtype=None):   
     if object_id == 9999998:
-        try:
-            elem = AMPACHECONNECT()
-        except:
-            return
-        update = elem.findtext("add")        
+        update = ampache.getSetting("add")        
         xbmc.log(update[:10],xbmc.LOGNOTICE)
         get_items(object_type=object_type,add=update[:10],object_subtype=object_subtype)
     elif object_id == 9999997:
@@ -591,10 +588,6 @@ def get_random(object_type):
             return
     
     else: 
-        try:
-            elem = AMPACHECONNECT()
-        except:
-            return
         items = int(ampache.getSetting(object_type))
         xbmc.log("AmpachePlugin::get_random: total items in the catalog " + str(items), xbmc.LOGDEBUG )
         if random_items > items:
