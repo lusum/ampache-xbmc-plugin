@@ -313,13 +313,13 @@ def get_user_pwd_login_url(nTime):
     myPassphrase = hasher.hexdigest()
     myURL = ampache.getSetting("server") + '/server/xml.server.php?action=handshake&auth='
     myURL += myPassphrase + "&timestamp=" + myTimeStamp
-    myURL += '&version=' + str(ampache.getSetting("api-version")) + '&user=' + ampache.getSetting("username")
+    myURL += '&version=' + ampache.getSetting("api-version") + '&user=' + ampache.getSetting("username")
     return myURL
 
 def get_auth_key_login_url():
     myURL = ampache.getSetting("server") + '/server/xml.server.php?action=handshake&auth='
     myURL += ampache.getSetting("api_key")
-    myURL += '&version=' + str(ampache.getSetting("api-version"))
+    myURL += '&version=' + ampache.getSetting("api-version")
     return myURL
 
 def handle_request(url):
@@ -357,20 +357,23 @@ def AMPACHECONNECT():
     elem = tree.getroot()
     token = elem.findtext('auth')
     version = elem.findtext('api')
-    ampache.setSetting("api-version", int(version))
-    total_artists = str(elem.findtext("artists"))
-    ampache.setSetting('total_artists',total_artists)
-    total_albums = str(elem.findtext("albums"))
-    ampache.setSetting('total_albums',total_albums)
-    total_playlists = str(elem.findtext("playlists"))
-    ampache.setSetting('total_playlists',total_playlists)
+    #setSettings only string or unicode
+    ampache.setSetting("api-version", version)
+    total_artists = elem.findtext("artists")
+    ampache.setSetting('artists',total_artists)
+    total_albums = elem.findtext("albums")
+    ampache.setSetting('albums',total_albums)
+    total_songs = elem.findtext("songs")
+    ampache.setSetting('songs',total_songs)
+    total_playlists = elem.findtext("playlists")
+    ampache.setSetting('playlists',total_playlists)
     ampache.setSetting('token',token)
     ampache.setSetting('token-exp',str(nTime+24000))
     return elem
 
 def ampache_http_request(action,add=None, filter=None, limit=5000,
-        offset=0,amtype=None, exact=None, obtype=None):
-    thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset,amtype=amtype,exact=exact, obtype=obtype)
+        offset=0,amtype=None, exact=None, ampmode=None):
+    thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset,amtype=amtype,exact=exact,ampmode=ampmode)
     try:
         response = handle_request(thisURL)
     except ConnectionError:
@@ -407,7 +410,7 @@ def get_items(object_type, object_id=None, add=None,
     
     amtype = None
     mode = None
-    obtype = None
+    ampmode = None
 
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
     xbmc.log("AmpachePlugin::get_items: object_type " + object_type, xbmc.LOGDEBUG)
@@ -430,29 +433,23 @@ def get_items(object_type, object_id=None, add=None,
         #stats management 
         elif object_subtype == 'hightest':
             action = 'stats'
-            if(ampache.getSetting("api-version")) > 400001:
-                obtype = 'album'
+            if(int(ampache.getSetting("api-version"))) > 400001:
+                amtype = 'album'
                 filter = 'hightest'
             else:
                 amtype = object_subtype
         elif object_subtype == 'frequent':
             action = 'stats'
-            if(ampache.getSetting("api-version")) > 400001:
-                obtype = 'album'
+            if(int(ampache.getSetting("api-version"))) > 400001:
+                amtype = 'album'
                 filter = 'frequent'
             else:
                 amtype = object_subtype
         elif object_subtype == 'flagged':
             action = 'stats'
-            if(ampache.getSetting("api-version")) > 400001:
-                obtype = 'album'
+            if(int(ampache.getSetting("api-version"))) > 400001:
+                amtype = 'album'
                 filter = 'flagged'
-            else:
-                amtype = object_subtype
-        elif object_subtype == 'random':
-            if(ampache.getSetting("api-version")) > 400001:
-                obtype = 'album'
-                filter = 'random'
             else:
                 amtype = object_subtype
     elif object_type == 'artists':
@@ -477,7 +474,7 @@ def get_items(object_type, object_id=None, add=None,
     
     try:
         elem = ampache_http_request(action,add=add,filter=filter, limit=limit,
-            amtype=amtype, exact=exact, obtype=obtype)
+            amtype=amtype, exact=exact, ampmode=ampmode)
     except:
         return
 
@@ -499,8 +496,7 @@ def get_items(object_type, object_id=None, add=None,
 
     addItem( object_type, mode , elem, useCacheArt)
 
-def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0,amtype=None,exact=None,
-        obtype=None):
+def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0,amtype=None,exact=None,ampmode=None):
     tokenexp = int(ampache.getSetting('token-exp'))
     if int(time.time()) > tokenexp:
         xbmc.log("refreshing token...", xbmc.LOGNOTICE )
@@ -514,14 +510,14 @@ def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0,amtype=Non
     thisURL += '&auth=' + token
     thisURL += '&limit=' +str(limit)
     thisURL += '&offset=' +str(offset)
-    if obtype:
-        thisURL += '&type=' + obtype
     if filter:
         thisURL += '&filter=' +urllib.quote_plus(str(filter))
     if add:
         thisURL += '&add=' + add
     if amtype:
         thisURL += '&type=' + amtype
+    if ampmode:
+        thisURL += '&mode=' + ampmode
     if exact:
         thisURL += '&exact=' + exact
     return thisURL
@@ -566,39 +562,55 @@ def get_all(object_type):
 def get_random(object_type):
     xbmc.log("AmpachePlugin::get_random: object_type " + object_type, xbmc.LOGDEBUG)
     mode = None
-    settings = "random_items"
     #object type can be : albums, artists, songs, playlists
     
     if object_type == 'albums':
+        amtype='album'
         mode = 3
     elif object_type == 'artists':
+        amtype='artist'
         mode = 2
     elif object_type == 'playlists':
+        amtype='playlist'
         mode = 14
-
+    elif object_type == 'songs':
+        amtype='song'
+    
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
-    try:
-        elem = AMPACHECONNECT()
-    except:
-        return
-    items = int(elem.findtext(object_type))
-    xbmc.log("AmpachePlugin::get_random: total items in the catalog " + str(items), xbmc.LOGDEBUG )
-    random_items = (int(ampache.getSetting(settings))*3)+3
-    if random_items > items:
-        random_items = items
+        
+    random_items = (int(ampache.getSetting("random_items"))*3)+3
     xbmc.log("AmpachePlugin::get_random: random_items " + str(random_items), xbmc.LOGDEBUG )
-    seq = random.sample(xrange(items),random_items)
-    xbmc.log("AmpachePlugin::get_random: seq " + str(seq), xbmc.LOGDEBUG )
-    elements = []
-    for item_id in seq:
+    if(int(ampache.getSetting("api-version"))) > 400001:
+        action = 'stats'
+        filter = 'random'
         try:
-            elem = ampache_http_request(object_type,offset=item_id,limit=1)
-            elements.append(elem)
+            elem = ampache_http_request(action,filter=filter,
+                    limit=random_items,amtype=amtype)
+            addItem( object_type, mode , elem)
         except:
-            pass
+            return
+    
+    else: 
+        try:
+            elem = AMPACHECONNECT()
+        except:
+            return
+        items = int(ampache.getSetting(object_type))
+        xbmc.log("AmpachePlugin::get_random: total items in the catalog " + str(items), xbmc.LOGDEBUG )
+        if random_items > items:
+            random_items = items
+        seq = random.sample(xrange(items),random_items)
+        xbmc.log("AmpachePlugin::get_random: seq " + str(seq), xbmc.LOGDEBUG )
+        elements = []
+        for item_id in seq:
+            try:
+                elem = ampache_http_request(object_type,offset=item_id,limit=1)
+                elements.append(elem)
+            except:
+                pass
    
-    for el in elements:
-        addItem( object_type, mode , el)
+        for el in elements:
+            addItem( object_type, mode , el)
 
 
 params=get_params()
@@ -645,9 +657,9 @@ if mode==None:
     addDir("Recent...",0,5,"DefaultFolder.png")
     addDir("Random...",0,7,"DefaultFolder.png")
     addDir("Various...",0,23,"DefaultFolder.png")
-    addDir("Artists (" + ampache.getSetting("total_artists")+ ")",None,1,"DefaultFolder.png")
-    addDir("Albums (" + ampache.getSetting("total_albums") + ")",None,2,"DefaultFolder.png")
-    addDir("Playlists (" + ampache.getSetting("total_playlists") + ")",None,13,"DefaultFolder.png")
+    addDir("Artists (" + ampache.getSetting("artists")+ ")",None,1,"DefaultFolder.png")
+    addDir("Albums (" + ampache.getSetting("albums") + ")",None,2,"DefaultFolder.png")
+    addDir("Playlists (" + ampache.getSetting("playlists") + ")",None,13,"DefaultFolder.png")
     addDir("Tags",None,18,"DefaultFolder.png")
 
 #   artist list ( called from main screen  ( mode None ) , search
@@ -663,7 +675,7 @@ elif mode==1:
         get_recent( "artists", object_id )
     elif object_id == 9999994:
         #removed cause nasty recursive call using some commands in web interface
-        #addDir("Refresh..",9999994,2,os.path.join(imagepath, 'refresh_icon.'))
+        #addDir("Refresh..",9999994,2,os.path.join(imagepath,'refresh_icon.png'))
         get_random('artists')
     #all artists list
     else:
@@ -684,10 +696,6 @@ elif mode==2:
         get_items(object_type="albums",object_subtype="frequent",limit=num_items)
     elif object_id == 9999992:
         get_items(object_type="albums",object_subtype="flagged",limit=num_items)
-    elif object_id == 9999991:
-        #removed cause nasty recursive call using some commands in web interface
-        #addDir("Refresh..",9999991,2,os.path.join(imagepath, 'refresh_icon.png'))
-        get_items(object_type="albums",object_subtype="random",limit=num_items)
     elif object_id == 9999990:
         #removed cause nasty recursive call using some commands in web interface
         #addDir("Refresh..",9999990,2,os.path.join(imagepath, 'refresh_icon.png'))
@@ -752,7 +760,6 @@ elif mode==6:
 elif mode==7:
     addDir("Random Artists...",9999994,1,"DefaultFolder.png")
     addDir("Random Albums...",9999990,2,"DefaultFolder.png")
-    addDir("Random Albums ( server side )...",9999991,2)
     addDir("Random Songs...",9999994,3,"DefaultFolder.png")
     addDir("Random Playlists...",9999994,13,"DefaultFolder.png")
 
