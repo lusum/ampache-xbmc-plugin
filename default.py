@@ -357,8 +357,11 @@ def AMPACHECONNECT():
     elem = tree.getroot()
     token = elem.findtext('auth')
     version = elem.findtext('api')
-    #setSettings only string or unicode
+    if not version:
+    #old api
+        version = elem.findtext('version')
     ampache.setSetting("api-version", version)
+    #setSettings only string or unicode
     total_artists = elem.findtext("artists")
     ampache.setSetting('artists',total_artists)
     total_albums = elem.findtext("albums")
