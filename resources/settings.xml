@@ -5,6 +5,7 @@
    <setting id="use_api_key" type="bool" label="30003" default="false"/>
    <setting id="api_key" type="text" label="30004" default=""/>
    <setting id="random_items" type="enum" label="30005" values="3|6|9|12|15|18|21" default="1"/>
+   <setting id="api-version" type="number" value="350001" label="30008" />
    <setting id="token" type="text" label="30009" />
 	 <setting id="token-exp" type="text" label="30010" />
 	 <setting id="disable_ssl_certs" type="bool" label="30011" default="false"/>
