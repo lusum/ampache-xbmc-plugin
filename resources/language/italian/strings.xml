@@ -4,7 +4,8 @@
     <string id="30002">Password</string>
     <string id="30003">Usa la chiave api invece di nome utente/password</string>
     <string id="30004">Chiave api</string>
-    <string id="30005">Numero di oggetti ( casuali e statistiche )</string>
+    <string id="30005">Versione dell'api</string>
+    <string id="30008">Numero di oggetti ( casuali e statistiche )</string>
     <string id="30009">Token</string>
     <string id="30010">Token expiration</string>
     <string id="30011">Disabilita la verifica del certificato SSL ( PERICOLOSO )</string>
