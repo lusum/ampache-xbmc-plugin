@@ -585,7 +585,8 @@ def get_random(object_type):
         #if items are less than random_itmes, return all items
         get_items(object_type, limit=items)
         return
-    if(int(ampache.getSetting("api-version"))) > 400001:
+    #playlists are not in the new stats api, so, use the old mode
+    if(int(ampache.getSetting("api-version"))) > 400001 and object_type != 'playlists':
         action = 'stats'
         filter = 'random'
         try:
