@@ -240,7 +240,7 @@ def addDir(name,object_id,mode,iconImage=None,elem=None,infoLabels=None):
     u=sys.argv[0]+"?object_id="+str(object_id)+"&mode="+str(mode)+"&name="+urllib.quote_plus(name)
     xbmc.log("AmpachePlugin::addDir url " + u, xbmc.LOGDEBUG)
     ok=xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]),url=u,listitem=liz,isFolder=True)
-    xbmc.log("AmpachePlugin::addDir ok " + str(ok), xbmc.LOGDEBUG)
+    #xbmc.log("AmpachePlugin::addDir ok " + str(ok), xbmc.LOGDEBUG)
     return ok
 
 #catch all function to add items to the directory using the low level addDir
@@ -412,6 +412,8 @@ def ampache_http_request(action,add=None, filter=None, limit=5000,
 def get_items(object_type, object_id=None, add=None,
         filter=None,limit=5000,useCacheArt=True, object_subtype=None, exact=None ):
     
+    if limit == None:
+        limit = int(ampache.getSetting(object_type))
     amtype = None
     mode = None
     ampmode = None
@@ -434,28 +436,6 @@ def get_items(object_type, object_id=None, add=None,
             action = 'tag_albums'
         elif object_subtype == 'album':
             action = 'album'
-        #stats management 
-        elif object_subtype == 'hightest':
-            action = 'stats'
-            if(int(ampache.getSetting("api-version"))) > 400001:
-                amtype = 'album'
-                filter = 'hightest'
-            else:
-                amtype = object_subtype
-        elif object_subtype == 'frequent':
-            action = 'stats'
-            if(int(ampache.getSetting("api-version"))) > 400001:
-                amtype = 'album'
-                filter = 'frequent'
-            else:
-                amtype = object_subtype
-        elif object_subtype == 'flagged':
-            action = 'stats'
-            if(int(ampache.getSetting("api-version"))) > 400001:
-                amtype = 'album'
-                filter = 'flagged'
-            else:
-                amtype = object_subtype
     elif object_type == 'artists':
         if object_subtype == 'tag_artists':
             action = 'tag_artists'
@@ -538,6 +518,34 @@ def do_search(object_type,object_subtype=None,thisFilter=None):
     if thisFilter:
         get_items(object_type=object_type,filter=thisFilter,object_subtype=object_subtype)
 
+def get_stats(object_type, object_subtype=None, limit=5000 ):       
+    
+    xbmc.log("AmpachePlugin::get_stats ",  xbmc.LOGDEBUG)
+    mode = None
+    if object_type == 'artists':
+        mode = 2
+    elif object_type == 'albums':
+        mode = 3
+   
+    xbmcplugin.setContent(int(sys.argv[1]), object_type)
+
+    action = 'stats'
+    if(ampache.getSetting("api-version")) < 400001:
+        amtype = object_subtype
+        filter = None
+    else:
+        if object_type == 'albums':
+            amtype='album'
+        elif object_type == 'artists':
+            amtype='artist'
+        elif object_type == 'songs':
+            amtype='song'
+        filter = object_subtype
+            
+    elem = ampache_http_request(action,filter=filter,limit=limit,amtype=amtype)
+  
+    addItem( object_type, mode , elem)
+
 def get_recent(object_type,object_id,object_subtype=None):   
     if object_id == 9999998:
         update = ampache.getSetting("add")        
@@ -549,15 +557,6 @@ def get_recent(object_type,object_id,object_subtype=None):
         get_items(object_type=object_type,add=get_time(-30),object_subtype=object_subtype)
     elif object_id == 9999995:
         get_items(object_type=object_type,add=get_time(-90),object_subtype=object_subtype)
-
-#get rid of this function in the near future and use simply get_items with limit = None
-def get_all(object_type):
-    try:
-        elem = AMPACHECONNECT()
-    except:
-        return
-    limit=int(elem.findtext(object_type))
-    get_items(object_type=object_type, limit=limit, useCacheArt=False)
 
 def get_random(object_type):
     xbmc.log("AmpachePlugin::get_random: object_type " + object_type, xbmc.LOGDEBUG)
@@ -580,6 +579,12 @@ def get_random(object_type):
         
     random_items = (int(ampache.getSetting("random_items"))*3)+3
     xbmc.log("AmpachePlugin::get_random: random_items " + str(random_items), xbmc.LOGDEBUG )
+    items = int(ampache.getSetting(object_type))
+    xbmc.log("AmpachePlugin::get_random: total items in the catalog " + str(items), xbmc.LOGDEBUG )
+    if random_items > items:
+        #if items are less than random_itmes, return all items
+        get_items(object_type, limit=items)
+        return
     if(int(ampache.getSetting("api-version"))) > 400001:
         action = 'stats'
         filter = 'random'
@@ -591,10 +596,6 @@ def get_random(object_type):
             return
     
     else: 
-        items = int(ampache.getSetting(object_type))
-        xbmc.log("AmpachePlugin::get_random: total items in the catalog " + str(items), xbmc.LOGDEBUG )
-        if random_items > items:
-            random_items = items
         seq = random.sample(xrange(items),random_items)
         xbmc.log("AmpachePlugin::get_random: seq " + str(seq), xbmc.LOGDEBUG )
         elements = []
@@ -664,6 +665,7 @@ if mode==None:
 elif mode==1:
     #artist, album, songs, playlist follow the same structure
     #search function
+    num_items = (int(ampache.getSetting("random_items"))*3)+3
     if object_id == 9999999:
         do_search("artists")
     #recent function
@@ -673,9 +675,19 @@ elif mode==1:
         #removed cause nasty recursive call using some commands in web interface
         #addDir("Refresh..",9999994,2,os.path.join(imagepath,'refresh_icon.png'))
         get_random('artists')
-    #all artists list
+    elif object_id == 9999993:
+        get_stats(object_type="artists",object_subtype="hightest",limit=num_items)
+    elif object_id == 9999992:
+        get_stats(object_type="artists",object_subtype="frequent",limit=num_items)
+    elif object_id == 9999991:
+        get_stats(object_type="artists",object_subtype="flagged",limit=num_items)
+    elif object_id == 9999990:
+        get_stats(object_type="artists",object_subtype="forgotten",limit=num_items)
+    elif object_id == 9999989:
+        get_stats(object_type="artists",object_subtype="newest",limit=num_items)
+    #get all artists
     else:
-        get_all("artists")
+        get_items("artists", limit=None, useCacheArt=False)
        
 #   albums list ( called from main screen ( mode None ) , search
 #   screen ( mode 4 ) and recent ( mode 5 )  )
@@ -687,33 +699,49 @@ elif mode==2:
     elif object_id > 9999994 and object_id < 9999999:
         get_recent( "albums", object_id )
     elif object_id == 9999994:
-        get_items(object_type="albums",object_subtype="hightest",limit=num_items)
-    elif object_id == 9999993:
-        get_items(object_type="albums",object_subtype="frequent",limit=num_items)
-    elif object_id == 9999992:
-        get_items(object_type="albums",object_subtype="flagged",limit=num_items)
-    elif object_id == 9999990:
         #removed cause nasty recursive call using some commands in web interface
         #addDir("Refresh..",9999990,2,os.path.join(imagepath, 'refresh_icon.png'))
         get_random('albums')
+    elif object_id == 9999993:
+        get_stats(object_type="albums",object_subtype="hightest",limit=num_items)
+    elif object_id == 9999992:
+        get_stats(object_type="albums",object_subtype="frequent",limit=num_items)
+    elif object_id == 9999991:
+        get_stats(object_type="albums",object_subtype="flagged",limit=num_items)
+    elif object_id == 9999990:
+        get_stats(object_type="albums",object_subtype="forgotten",limit=num_items)
+    elif object_id == 9999989:
+        get_stats(object_type="albums",object_subtype="newest",limit=num_items)
     elif object_id:
         get_items(object_type="albums",object_id=object_id,object_subtype="artist_albums")
+    #get all albums
     else:
-        get_all("albums")
+        get_items("albums", limit=None, useCacheArt=False)
 
 #   song mode ( called from search screen ( mode 4 ) and recent ( mode 5 )  )
         
 elif mode==3:
-        if object_id == 9999999:
-            do_search("songs")
-        elif object_id > 9999994 and object_id < 9999999:
-            get_recent( "songs", object_id )
-        elif object_id == 9999994:
-            #removed cause nasty recursive call using some commands in web interface
-            #addDir("Refresh..",9999994,2,os.path.join(imagepath, 'refresh_icon.png'))
-            get_random('songs')
-        else:
-            get_items(object_type="songs",object_id=object_id,object_subtype="album_songs")
+    num_items = (int(ampache.getSetting("random_items"))*3)+3
+    if object_id == 9999999:
+        do_search("songs")
+    elif object_id > 9999994 and object_id < 9999999:
+        get_recent( "songs", object_id )
+    elif object_id == 9999994:
+        #removed cause nasty recursive call using some commands in web interface
+        #addDir("Refresh..",9999994,2,os.path.join(imagepath, 'refresh_icon.png'))
+        get_random('songs')
+    elif object_id == 9999993:
+        get_stats(object_type="songs",object_subtype="hightest",limit=num_items)
+    elif object_id == 9999992:
+        get_stats(object_type="songs",object_subtype="frequent",limit=num_items)
+    elif object_id == 9999991:
+        get_stats(object_type="songs",object_subtype="flagged",limit=num_items)
+    elif object_id == 9999990:
+        get_stats(object_type="songs",object_subtype="forgotten",limit=num_items)
+    elif object_id == 9999989:
+        get_stats(object_type="songs",object_subtype="newest",limit=num_items)
+    else:
+        get_items(object_type="songs",object_id=object_id,object_subtype="album_songs")
 
 
 # search screen ( called from main screen )
@@ -755,7 +783,7 @@ elif mode==6:
 
 elif mode==7:
     addDir("Random Artists...",9999994,1,"DefaultFolder.png")
-    addDir("Random Albums...",9999990,2,"DefaultFolder.png")
+    addDir("Random Albums...",9999994,2,"DefaultFolder.png")
     addDir("Random Songs...",9999994,3,"DefaultFolder.png")
     addDir("Random Playlists...",9999994,13,"DefaultFolder.png")
 
@@ -799,27 +827,6 @@ elif mode==13:
 
 elif mode==14:
     get_items(object_type="songs",object_id=object_id,object_subtype="playlist_songs")
-#        "Ampache Playlists"
-# search for playlist song or recent playlist song ( this one for sure ) will
-# be implemented if i will find a valid reason ( now i have no one )
-#    get_items(object_type="playlists")
-#        if object_id == 9999999:
-#            thisFilter = getFilterFromUser()
-#            if thisFilter:
-#                get_items(object_type="playlist_songs",filter=thisFilter)
-#        elif object_id == 9999998:
-#            elem = AMPACHECONNECT()
-#            update = elem.findtext("add")        
-#            xbmc.log(update[:10],xbmc.LOGNOTICE)
-#            get_items(object_type="playlist_songs",add=update[:10])
-#        elif object_id == 9999997:
-#            get_items(object_type="playlist_songs",add=get_time(-7))
-#        elif object_id == 9999996:
-#            get_items(object_type="playlist_songs",add=get_time(-30))
-#        elif object_id == 9999995:
-#            get_items(object_type="playlist_songs",add=get_time(-90))
-#        else:
-#           get_items(object_type="playlist_songs",object_id=object_id)
 
 elif mode==15:
     if xbmc.getCondVisibility("Window.IsActive(musicplaylist)"):
@@ -842,33 +849,57 @@ elif mode==18:
     addDir("Song tags...",object_id,21)
 
 elif mode==19:
-        if object_id == 9999999:
-            do_search("tags","tag_artists")
-        elif object_id:
-            get_items(object_type="artists", object_subtype="tag_artists",object_id=object_id)
-        else:
-            get_items(object_type = "tags", object_subtype="tag_artists")
+    if object_id == 9999999:
+        do_search("tags","tag_artists")
+    elif object_id:
+        get_items(object_type="artists", object_subtype="tag_artists",object_id=object_id)
+    else:
+        get_items(object_type = "tags", object_subtype="tag_artists")
 
 elif mode==20:
-        if object_id == 9999999:
-            do_search("tags","tag_albums")
-        elif object_id:
-            get_items(object_type="albums", object_subtype="tag_albums",object_id=object_id)
-        else:
-            get_items(object_type = "tags", object_subtype="tag_albums")
+    if object_id == 9999999:
+        do_search("tags","tag_albums")
+    elif object_id:
+        get_items(object_type="albums", object_subtype="tag_albums",object_id=object_id)
+    else:
+        get_items(object_type = "tags", object_subtype="tag_albums")
 
 elif mode==21:
-        if object_id == 9999999:
-            do_search("tags","tag_songs")
-        elif object_id:
-            get_items(object_type="songs", object_subtype="tag_songs",object_id=object_id)
-        else:
-            get_items(object_type = "tags", object_subtype="tag_songs")
+    if object_id == 9999999:
+        do_search("tags","tag_songs")
+    elif object_id:
+        get_items(object_type="songs", object_subtype="tag_songs",object_id=object_id)
+    else:
+        get_items(object_type = "tags", object_subtype="tag_songs")
 
 elif mode==23:
-    addDir("Hightest Rated Albums...",9999994,2)
-    addDir("Frequent Albums...",9999993,2)
-    addDir("Flagged Albums...",9999992,2)
+    if(int(ampache.getSetting("api-version"))) > 400001:
+        addDir("Stats Artists...",9999999,24)
+    addDir("Stats Albums...",9999998,25)
+    if(int(ampache.getSetting("api-version"))) > 400001:
+        addDir("Stats Songs...",9999997,26)
+
+elif mode==24:
+    addDir("Hightest Rated Artists...",9999993,1)
+    addDir("Frequent Artists...",9999992,1)
+    addDir("Flagged Artists...",9999991,1)
+    addDir("Forgotten Artists...",9999990,1)
+    addDir("Newest Artists...",9999989,1)
+
+elif mode==25:
+    addDir("Hightest Rated Albums...",9999993,2)
+    addDir("Frequent Albums...",9999992,2)
+    addDir("Flagged Albums...",9999991,2)
+    if(int(ampache.getSetting("api-version"))) > 400001:
+        addDir("Forgotten Albums...",9999990,2)
+        addDir("Newest Albums...",9999989,2)
+
+elif mode==26:
+    addDir("Hightest Rated Songs...",9999993,3)
+    addDir("Frequent Songs...",9999992,3)
+    addDir("Flagged Songs...",9999991,3)
+    addDir("Forgotten Songs...",9999990,3)
+    addDir("Newest Songs...",9999989,3)
 
 if mode < 30:
     xbmc.log("AmpachePlugin::endOfDirectory " + sys.argv[1],  xbmc.LOGDEBUG)
