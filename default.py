@@ -1,12 +1,12 @@
 import sys
 import os
-import socket
 import re
-import random,xbmcplugin,xbmcgui, datetime, time, urllib,urllib2
+import random,xbmcplugin,xbmcgui,urllib
+import datetime
 import xml.etree.ElementTree as ET
-import hashlib
 import xbmcaddon
-import ssl
+
+from resources.lib import ampache_connect
 
 # Shared resources
 
@@ -18,18 +18,8 @@ mediaDir = os.path.join( BASE_RESOURCE_PATH , 'media' )
 cacheDir = os.path.join( mediaDir , 'cache' )
 imagepath = os.path.join( mediaDir ,'images')
 
-
-#   string to bool function : from string 'true' or 'false' to boolean True or
-#   False, raise ValueError
-def str_to_bool(s):
-    if s == 'true':
-        return True
-    elif s == 'false':
-        return False
-    else:
-        raise ValueError
-
 def cacheArt(url):
+        ampacheConnect = ampache_connect.AmpacheConnect()
 	strippedAuth = url.split('&')
 	imageID = re.search(r"id=(\d+)", strippedAuth[0])
         #security check:
@@ -49,7 +39,7 @@ def cacheArt(url):
 		return pathJpg
 	else:
                 xbmc.log("AmpachePlugin::CacheArt: File needs fetching ",xbmc.LOGDEBUG)
-                opener = handle_request(url)
+                opener = ampacheConnect.handle_request(url)
 		if opener.headers.maintype == 'image':
 			extension = opener.headers['content-type']
 			tmpExt = extension.split("/")
@@ -204,8 +194,10 @@ def addSongLinks(elem):
 # playing of that item.
 def play_track(id):
     ''' Start to stream the track with the given id. '''
+    ampConn = ampache_connect.AmpacheConnect()
     try:
-        elem = ampache_http_request("song",filter=id)
+        ampConn.filter = id 
+        elem = ampConn.ampache_http_request("song")
     except:
         return
     for thisnode in elem:
@@ -297,126 +289,23 @@ def getFilterFromUser():
     kb =  xbmcgui.Dialog()
     result = kb.input('', type=xbmcgui.INPUT_ALPHANUM)
     if result:
-        filter = result
+        thisFilter = result
     else:
         return False
-    return(filter)
+    return(thisFilter)
 
-def get_user_pwd_login_url(nTime):
-    myTimeStamp = str(nTime)
-    sdf = ampache.getSetting("password")
-    hasher = hashlib.new('sha256')
-    hasher.update(ampache.getSetting("password"))
-    myKey = hasher.hexdigest()
-    hasher = hashlib.new('sha256')
-    hasher.update(myTimeStamp + myKey)
-    myPassphrase = hasher.hexdigest()
-    myURL = ampache.getSetting("server") + '/server/xml.server.php?action=handshake&auth='
-    myURL += myPassphrase + "&timestamp=" + myTimeStamp
-    myURL += '&version=' + ampache.getSetting("api-version") + '&user=' + ampache.getSetting("username")
-    return myURL
-
-def get_auth_key_login_url():
-    myURL = ampache.getSetting("server") + '/server/xml.server.php?action=handshake&auth='
-    myURL += ampache.getSetting("api_key")
-    myURL += '&version=' + ampache.getSetting("api-version")
-    return myURL
-
-def handle_request(url):
-    try:
-        xbmc.log(url,xbmc.LOGNOTICE)
-        req = urllib2.Request(url)
-        ssl_certs_str = ampache.getSetting("disable_ssl_certs")
-        if str_to_bool(ssl_certs_str):
-            gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-            response = urllib2.urlopen(req, context=gcontext, timeout=400)
-            xbmc.log("AmpachePlugin::AmpacheConnect: ssl",xbmc.LOGDEBUG)
-        else:
-            response = urllib2.urlopen(req, timeout=400)
-            xbmc.log("AmpachePlugin::AmpacheConnect: nossl",xbmc.LOGDEBUG)
-    except:
-        xbmc.log("AmpachePlugin::ConnectionError",xbmc.LOGDEBUG)
-        xbmc.executebuiltin("ConnectionError" )
-        raise ConnectionError
-    return response
-
-def AMPACHECONNECT():
-    socket.setdefaulttimeout(3600)
-    nTime = int(time.time())
-    use_api_key = ampache.getSetting("use_api_key")
-    if str_to_bool(use_api_key):
-        myURL = get_auth_key_login_url() 
-    else: 
-        myURL = get_user_pwd_login_url(nTime)
-    try:
-        response = handle_request(myURL)
-    except ConnectionError:
-        raise ConnectionError
-    tree=ET.parse(response)
-    response.close()
-    elem = tree.getroot()
-    token = elem.findtext('auth')
-    version = elem.findtext('api')
-    if not version:
-    #old api
-        version = elem.findtext('version')
-    ampache.setSetting("api-version", version)
-    #setSettings only string or unicode
-    total_artists = elem.findtext("artists")
-    ampache.setSetting('artists',total_artists)
-    total_albums = elem.findtext("albums")
-    ampache.setSetting('albums',total_albums)
-    total_songs = elem.findtext("songs")
-    ampache.setSetting('songs',total_songs)
-    total_playlists = elem.findtext("playlists")
-    ampache.setSetting('playlists',total_playlists)
-    ampache.setSetting('add',elem.findtext("add"))
-    ampache.setSetting('token',token)
-    ampache.setSetting('token-exp',str(nTime+24000))
-    return elem
-
-def ampache_http_request(action,add=None, filter=None, limit=5000,
-        offset=0,amtype=None, exact=None, ampmode=None):
-    thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset,amtype=amtype,exact=exact,ampmode=ampmode)
-    try:
-        response = handle_request(thisURL)
-    except ConnectionError:
-        raise ConnectionError
-    contents = response.read()
-    contents = contents.replace("\0", "")
-    #remove bug & it is not allowed as text in tags
-    
-    #code useful for debugging/parser needed
-    xbmc.log("AmpachePlugin::ampache_http_request: contents " + contents, xbmc.LOGDEBUG)
-    #parser = ET.XMLParser(recover=True)
-    #tree=ET.XML(contents, parser = parser)
-    tree=ET.XML(contents)
-    response.close()
-    if tree.findtext("error"):
-        errornode = tree.find("error")
-        if errornode.attrib["code"]=="401":
-            try:
-                tree = AMPACHECONNECT()
-            except ConnectionError:
-                raise ConnectionError
-            thisURL = build_ampache_url(action,filter=filter,add=add,limit=limit,offset=offset,amtype=amtype,exact=exact)
-            try:
-                response = handle_request(thisURL)
-            except ConnectionError:
-                raise ConnectionError
-            contents = response.read()
-            tree=ET.XML(contents)
-            response.close()
-    return tree
+def get_time(time_offset):
+    d = datetime.date.today()
+    dt = datetime.timedelta(days=time_offset)
+    nd = d + dt
+    return nd.isoformat()
 
 def get_items(object_type, object_id=None, add=None,
-        filter=None,limit=5000,useCacheArt=True, object_subtype=None, exact=None ):
+        thisFilter=None,limit=5000,useCacheArt=True, object_subtype=None, exact=None ):
     
     if limit == None:
         limit = int(ampache.getSetting(object_type))
-    amtype = None
     mode = None
-    ampmode = None
 
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
     xbmc.log("AmpachePlugin::get_items: object_type " + object_type, xbmc.LOGDEBUG)
@@ -454,11 +343,16 @@ def get_items(object_type, object_id=None, add=None,
             action = 'search_songs'
 
     if object_id:
-        filter = object_id
+        thisFilter = object_id
     
     try:
-        elem = ampache_http_request(action,add=add,filter=filter, limit=limit,
-            amtype=amtype, exact=exact, ampmode=ampmode)
+        ampConn = ampache_connect.AmpacheConnect()
+        ampConn.add = add
+        ampConn.filter = thisFilter
+        ampConn.limit = limit
+        ampConn.exact = exact
+
+        elem = ampConn.ampache_http_request(action)
     except:
         return
 
@@ -480,45 +374,15 @@ def get_items(object_type, object_id=None, add=None,
 
     addItem( object_type, mode , elem, useCacheArt)
 
-def build_ampache_url(action,filter=None,add=None,limit=5000,offset=0,amtype=None,exact=None,ampmode=None):
-    tokenexp = int(ampache.getSetting('token-exp'))
-    if int(time.time()) > tokenexp:
-        xbmc.log("refreshing token...", xbmc.LOGNOTICE )
-        try:
-            elem = AMPACHECONNECT()
-        except:
-            return
-
-    token=ampache.getSetting('token')    
-    thisURL = ampache.getSetting("server") + '/server/xml.server.php?action=' + action 
-    thisURL += '&auth=' + token
-    thisURL += '&limit=' +str(limit)
-    thisURL += '&offset=' +str(offset)
-    if filter:
-        thisURL += '&filter=' +urllib.quote_plus(str(filter))
-    if add:
-        thisURL += '&add=' + add
-    if amtype:
-        thisURL += '&type=' + amtype
-    if ampmode:
-        thisURL += '&mode=' + ampmode
-    if exact:
-        thisURL += '&exact=' + exact
-    return thisURL
-
-def get_time(time_offset):
-    d = datetime.date.today()
-    dt = datetime.timedelta(days=time_offset)
-    nd = d + dt
-    return nd.isoformat()
-
 def do_search(object_type,object_subtype=None,thisFilter=None):
     if not thisFilter:
         thisFilter = getFilterFromUser()
     if thisFilter:
-        get_items(object_type=object_type,filter=thisFilter,object_subtype=object_subtype)
+        get_items(object_type=object_type,thisFilter=thisFilter,object_subtype=object_subtype)
 
 def get_stats(object_type, object_subtype=None, limit=5000 ):       
+    
+    ampConn = ampache_connect.AmpacheConnect()
     
     xbmc.log("AmpachePlugin::get_stats ",  xbmc.LOGDEBUG)
     mode = None
@@ -532,7 +396,7 @@ def get_stats(object_type, object_subtype=None, limit=5000 ):
     action = 'stats'
     if(ampache.getSetting("api-version")) < 400001:
         amtype = object_subtype
-        filter = None
+        thisFilter = None
     else:
         if object_type == 'albums':
             amtype='album'
@@ -540,9 +404,16 @@ def get_stats(object_type, object_subtype=None, limit=5000 ):
             amtype='artist'
         elif object_type == 'songs':
             amtype='song'
-        filter = object_subtype
-            
-    elem = ampache_http_request(action,filter=filter,limit=limit,amtype=amtype)
+        thisFilter = object_subtype
+    
+    try:
+        ampConn.filter = thisFilter
+        ampConn.limit = limit
+        ampConn.type = amtype
+                
+        elem = ampConn.ampache_http_request(action)
+    except:
+        return
   
     addItem( object_type, mode , elem)
 
@@ -562,6 +433,8 @@ def get_random(object_type):
     xbmc.log("AmpachePlugin::get_random: object_type " + object_type, xbmc.LOGDEBUG)
     mode = None
     #object type can be : albums, artists, songs, playlists
+    
+    ampConn = ampache_connect.AmpacheConnect()
     
     if object_type == 'albums':
         amtype='album'
@@ -588,10 +461,13 @@ def get_random(object_type):
     #playlists are not in the new stats api, so, use the old mode
     if(int(ampache.getSetting("api-version"))) > 400001 and object_type != 'playlists':
         action = 'stats'
-        filter = 'random'
+        thisFilter = 'random'
         try:
-            elem = ampache_http_request(action,filter=filter,
-                    limit=random_items,amtype=amtype)
+            ampConn.filter = thisFilter
+            ampConn.limit = random_items
+            ampConn.type = amtype
+
+            elem = ampConn.ampache_http_request(action)
             addItem( object_type, mode , elem)
         except:
             return
@@ -602,7 +478,9 @@ def get_random(object_type):
         elements = []
         for item_id in seq:
             try:
-                elem = ampache_http_request(object_type,offset=item_id,limit=1)
+                ampConn.offset = item_id
+                ampConn.limit = 1
+                elem = ampConn.ampache_http_request(object_type)
                 elements.append(elem)
             except:
                 pass
@@ -645,10 +523,11 @@ except:
         pass
 
 
+ampacheConnect = ampache_connect.AmpacheConnect()
 
 if mode==None:
     try:
-        elem = AMPACHECONNECT()
+        elem = ampacheConnect.AMPACHECONNECT()
     except:
         elem = ET.Element("")
     addDir("Search...",0,4,"DefaultFolder.png")
