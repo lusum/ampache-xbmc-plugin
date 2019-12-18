@@ -7,6 +7,7 @@ import xml.etree.ElementTree as ET
 import xbmcaddon
 
 from resources.lib import ampache_connect
+from resources.lib import json_storage
 
 # Shared resources
 
@@ -303,8 +304,11 @@ def get_time(time_offset):
 def get_items(object_type, object_id=None, add=None,
         thisFilter=None,limit=5000,useCacheArt=True, object_subtype=None, exact=None ):
     
+    jsStor = json_storage.JsonStorage("general.json")
+    tempData = jsStor.getData()
+    
     if limit == None:
-        limit = int(ampache.getSetting(object_type))
+        limit = int(tempData[object_type])
     mode = None
 
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
@@ -383,6 +387,8 @@ def do_search(object_type,object_subtype=None,thisFilter=None):
 def get_stats(object_type, object_subtype=None, limit=5000 ):       
     
     ampConn = ampache_connect.AmpacheConnect()
+    jsStor = json_storage.JsonStorage("general.json")
+    tempData = jsStor.getData()
     
     xbmc.log("AmpachePlugin::get_stats ",  xbmc.LOGDEBUG)
     mode = None
@@ -394,7 +400,7 @@ def get_stats(object_type, object_subtype=None, limit=5000 ):
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
 
     action = 'stats'
-    if(ampache.getSetting("api-version")) < 400001:
+    if(tempData["api-version"]) < 400001:
         amtype = object_subtype
         thisFilter = None
     else:
@@ -418,8 +424,11 @@ def get_stats(object_type, object_subtype=None, limit=5000 ):
     addItem( object_type, mode , elem)
 
 def get_recent(object_type,object_id,object_subtype=None):   
+    jsStor = json_storage.JsonStorage("general.json")
+    tempData = jsStor.getData()
+
     if object_id == 9999998:
-        update = ampache.getSetting("add")        
+        update = tempData["add"]        
         xbmc.log(update[:10],xbmc.LOGNOTICE)
         get_items(object_type=object_type,add=update[:10],object_subtype=object_subtype)
     elif object_id == 9999997:
@@ -435,6 +444,8 @@ def get_random(object_type):
     #object type can be : albums, artists, songs, playlists
     
     ampConn = ampache_connect.AmpacheConnect()
+    jsStor = json_storage.JsonStorage("general.json")
+    tempData = jsStor.getData()
     
     if object_type == 'albums':
         amtype='album'
@@ -452,14 +463,14 @@ def get_random(object_type):
         
     random_items = (int(ampache.getSetting("random_items"))*3)+3
     xbmc.log("AmpachePlugin::get_random: random_items " + str(random_items), xbmc.LOGDEBUG )
-    items = int(ampache.getSetting(object_type))
+    items = int(tempData[object_type])
     xbmc.log("AmpachePlugin::get_random: total items in the catalog " + str(items), xbmc.LOGDEBUG )
     if random_items > items:
         #if items are less than random_itmes, return all items
         get_items(object_type, limit=items)
         return
     #playlists are not in the new stats api, so, use the old mode
-    if(int(ampache.getSetting("api-version"))) > 400001 and object_type != 'playlists':
+    if(int(tempData["api-version"])) >= 400001 and object_type != 'playlists':
         action = 'stats'
         thisFilter = 'random'
         try:
@@ -530,13 +541,17 @@ if mode==None:
         elem = ampacheConnect.AMPACHECONNECT()
     except:
         elem = ET.Element("")
+    
+    jsStor = json_storage.JsonStorage("general.json")
+    tempData = jsStor.getData()
+
     addDir("Search...",0,4,"DefaultFolder.png")
     addDir("Recent...",0,5,"DefaultFolder.png")
     addDir("Random...",0,7,"DefaultFolder.png")
     addDir("Various...",0,23,"DefaultFolder.png")
-    addDir("Artists (" + ampache.getSetting("artists")+ ")",None,1,"DefaultFolder.png")
-    addDir("Albums (" + ampache.getSetting("albums") + ")",None,2,"DefaultFolder.png")
-    addDir("Playlists (" + ampache.getSetting("playlists") + ")",None,13,"DefaultFolder.png")
+    addDir("Artists (" + tempData["artists"]+ ")",None,1,"DefaultFolder.png")
+    addDir("Albums (" + tempData["albums"] + ")",None,2,"DefaultFolder.png")
+    addDir("Playlists (" + tempData["playlists"] + ")",None,13,"DefaultFolder.png")
     addDir("Tags",None,18,"DefaultFolder.png")
 
 #   artist list ( called from main screen  ( mode None ) , search
@@ -753,10 +768,13 @@ elif mode==21:
         get_items(object_type = "tags", object_subtype="tag_songs")
 
 elif mode==23:
-    if(int(ampache.getSetting("api-version"))) > 400001:
+    jsStor = json_storage.JsonStorage("general.json")
+    tempData = jsStor.getData()
+
+    if(int(tempData["api-version"])) >= 400001:
         addDir("Stats Artists...",9999999,24)
     addDir("Stats Albums...",9999998,25)
-    if(int(ampache.getSetting("api-version"))) > 400001:
+    if(int(tempData["api-version"])) >= 400001:
         addDir("Stats Songs...",9999997,26)
 
 elif mode==24:
@@ -767,10 +785,13 @@ elif mode==24:
     addDir("Newest Artists...",9999989,1)
 
 elif mode==25:
+    jsStor = json_storage.JsonStorage("general.json")
+    tempData = jsStor.getData()
+
     addDir("Hightest Rated Albums...",9999993,2)
     addDir("Frequent Albums...",9999992,2)
     addDir("Flagged Albums...",9999991,2)
-    if(int(ampache.getSetting("api-version"))) > 400001:
+    if(int(tempData["api-version"])) >= 400001:
         addDir("Forgotten Albums...",9999990,2)
         addDir("Newest Albums...",9999989,2)
 

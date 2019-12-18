@@ -7,6 +7,8 @@ import xbmcaddon
 import sys
 import xml.etree.ElementTree as ET
 
+from resources.lib import json_storage
+
 class AmpacheConnect():
     
     class ConnectionError(Exception):
@@ -21,6 +23,7 @@ class AmpacheConnect():
         self.type=None
         self.exact=None 
         self.mode=None
+        self.id=None
     
     #   string to bool function : from string 'true' or 'false' to boolean True or
     #   False, raise ValueError
@@ -71,6 +74,8 @@ class AmpacheConnect():
         return response
 
     def AMPACHECONNECT(self):
+        jsStor = json_storage.JsonStorage("general.json")
+        tempData = {}
         socket.setdefaulttimeout(3600)
         nTime = int(time.time())
         use_api_key = self._ampache.getSetting("use_api_key")
@@ -90,17 +95,14 @@ class AmpacheConnect():
         if not version:
         #old api
             version = elem.findtext('version')
-        self._ampache.setSetting("api-version", version)
         #setSettings only string or unicode
-        total_artists = elem.findtext("artists")
-        self._ampache.setSetting('artists',total_artists)
-        total_albums = elem.findtext("albums")
-        self._ampache.setSetting('albums',total_albums)
-        total_songs = elem.findtext("songs")
-        self._ampache.setSetting('songs',total_songs)
-        total_playlists = elem.findtext("playlists")
-        self._ampache.setSetting('playlists',total_playlists)
-        self._ampache.setSetting('add',elem.findtext("add"))
+        tempData["api-version"] = version
+        tempData["artists"] = elem.findtext("artists")
+        tempData["albums"] = elem.findtext("albums")
+        tempData["songs"] = elem.findtext("songs")
+        tempData["playlists"] = elem.findtext("playlists")
+        tempData["add"] = elem.findtext("add")
+        jsStor.save(tempData)
         self._ampache.setSetting('token',token)
         self._ampache.setSetting('token-exp',str(nTime+24000))
         return elem
@@ -162,6 +164,8 @@ class AmpacheConnect():
             thisURL += '&mode=' + self.mode
         if self.exact:
             thisURL += '&exact=' + self.exact
+        if self.id:
+            thisURL += '&id=' + self.id
         return thisURL
 
 
