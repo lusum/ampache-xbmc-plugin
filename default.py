@@ -500,308 +500,307 @@ def get_random(object_type):
             addItem( object_type, mode , el)
 
 
-params=get_params()
-name=None
-mode=None
-object_id=None
-win_id=None
-title=None
 
-try:
-        name=urllib.unquote_plus(params["name"])
-        xbmc.log("AmpachePlugin::name " + name, xbmc.LOGDEBUG)
-except:
-        pass
-try:
-        mode=int(params["mode"])
-        xbmc.log("AmpachePlugin::mode " + str(mode), xbmc.LOGDEBUG)
-except:
-        pass
-try:
-        object_id=int(params["object_id"])
-        xbmc.log("AmpachePlugin::object_id " + str(object_id), xbmc.LOGDEBUG)
-except:
-        pass
-try:
-        win_id=int(params["win_id"])
-        xbmc.log("AmpachePlugin::win_id " + str(win_id), xbmc.LOGDEBUG)
-except:
-        pass
-try:
-        title=urllib.unquote_plus(params["title"])
-        xbmc.log("AmpachePlugin::title " + title, xbmc.LOGDEBUG)
-except:
-        pass
+if (__name__ == '__main__'):
+    params=get_params()
+    name=None
+    mode=None
+    object_id=None
+    win_id=None
+    title=None
 
-
-ampacheConnect = ampache_connect.AmpacheConnect()
-
-if mode==None:
     try:
-        elem = ampacheConnect.AMPACHECONNECT()
+            name=urllib.unquote_plus(params["name"])
+            xbmc.log("AmpachePlugin::name " + name, xbmc.LOGDEBUG)
     except:
-        elem = ET.Element("")
-    
+            pass
+    try:
+            mode=int(params["mode"])
+            xbmc.log("AmpachePlugin::mode " + str(mode), xbmc.LOGDEBUG)
+    except:
+            pass
+    try:
+            object_id=int(params["object_id"])
+            xbmc.log("AmpachePlugin::object_id " + str(object_id), xbmc.LOGDEBUG)
+    except:
+            pass
+    try:
+            win_id=int(params["win_id"])
+            xbmc.log("AmpachePlugin::win_id " + str(win_id), xbmc.LOGDEBUG)
+    except:
+            pass
+    try:
+            title=urllib.unquote_plus(params["title"])
+            xbmc.log("AmpachePlugin::title " + title, xbmc.LOGDEBUG)
+    except:
+            pass
+
+
+    ampacheConnect = ampache_connect.AmpacheConnect()
     jsStor = json_storage.JsonStorage("general.json")
     tempData = jsStor.getData()
 
-    addDir("Search...",0,4,"DefaultFolder.png")
-    addDir("Recent...",0,5,"DefaultFolder.png")
-    addDir("Random...",0,7,"DefaultFolder.png")
-    addDir("Various...",0,23,"DefaultFolder.png")
-    addDir("Artists (" + tempData["artists"]+ ")",None,1,"DefaultFolder.png")
-    addDir("Albums (" + tempData["albums"] + ")",None,2,"DefaultFolder.png")
-    addDir("Playlists (" + tempData["playlists"] + ")",None,13,"DefaultFolder.png")
-    addDir("Tags",None,18,"DefaultFolder.png")
-
-#   artist list ( called from main screen  ( mode None ) , search
-#   screen ( mode 4 ) and recent ( mode 5 )  )
-
-elif mode==1:
-    #artist, album, songs, playlist follow the same structure
-    #search function
-    num_items = (int(ampache.getSetting("random_items"))*3)+3
-    if object_id == 9999999:
-        do_search("artists")
-    #recent function
-    elif object_id > 9999994 and object_id < 9999999:
-        get_recent( "artists", object_id )
-    elif object_id == 9999994:
-        #removed cause nasty recursive call using some commands in web interface
-        #addDir("Refresh..",9999994,2,os.path.join(imagepath,'refresh_icon.png'))
-        get_random('artists')
-    elif object_id == 9999993:
-        get_stats(object_type="artists",object_subtype="hightest",limit=num_items)
-    elif object_id == 9999992:
-        get_stats(object_type="artists",object_subtype="frequent",limit=num_items)
-    elif object_id == 9999991:
-        get_stats(object_type="artists",object_subtype="flagged",limit=num_items)
-    elif object_id == 9999990:
-        get_stats(object_type="artists",object_subtype="forgotten",limit=num_items)
-    elif object_id == 9999989:
-        get_stats(object_type="artists",object_subtype="newest",limit=num_items)
-    #get all artists
-    else:
-        get_items("artists", limit=None, useCacheArt=False)
-       
-#   albums list ( called from main screen ( mode None ) , search
-#   screen ( mode 4 ) and recent ( mode 5 )  )
-
-elif mode==2:
-    num_items = (int(ampache.getSetting("random_items"))*3)+3
-    if object_id == 9999999:
-        do_search("albums")
-    elif object_id > 9999994 and object_id < 9999999:
-        get_recent( "albums", object_id )
-    elif object_id == 9999994:
-        #removed cause nasty recursive call using some commands in web interface
-        #addDir("Refresh..",9999990,2,os.path.join(imagepath, 'refresh_icon.png'))
-        get_random('albums')
-    elif object_id == 9999993:
-        get_stats(object_type="albums",object_subtype="hightest",limit=num_items)
-    elif object_id == 9999992:
-        get_stats(object_type="albums",object_subtype="frequent",limit=num_items)
-    elif object_id == 9999991:
-        get_stats(object_type="albums",object_subtype="flagged",limit=num_items)
-    elif object_id == 9999990:
-        get_stats(object_type="albums",object_subtype="forgotten",limit=num_items)
-    elif object_id == 9999989:
-        get_stats(object_type="albums",object_subtype="newest",limit=num_items)
-    elif object_id:
-        get_items(object_type="albums",object_id=object_id,object_subtype="artist_albums")
-    #get all albums
-    else:
-        get_items("albums", limit=None, useCacheArt=False)
-
-#   song mode ( called from search screen ( mode 4 ) and recent ( mode 5 )  )
+    if mode==None:
+        try:
+            elem = ampacheConnect.AMPACHECONNECT()
+        except:
+            elem = ET.Element("")
         
-elif mode==3:
-    num_items = (int(ampache.getSetting("random_items"))*3)+3
-    if object_id == 9999999:
-        do_search("songs")
-    elif object_id > 9999994 and object_id < 9999999:
-        get_recent( "songs", object_id )
-    elif object_id == 9999994:
-        #removed cause nasty recursive call using some commands in web interface
-        #addDir("Refresh..",9999994,2,os.path.join(imagepath, 'refresh_icon.png'))
-        get_random('songs')
-    elif object_id == 9999993:
-        get_stats(object_type="songs",object_subtype="hightest",limit=num_items)
-    elif object_id == 9999992:
-        get_stats(object_type="songs",object_subtype="frequent",limit=num_items)
-    elif object_id == 9999991:
-        get_stats(object_type="songs",object_subtype="flagged",limit=num_items)
-    elif object_id == 9999990:
-        get_stats(object_type="songs",object_subtype="forgotten",limit=num_items)
-    elif object_id == 9999989:
-        get_stats(object_type="songs",object_subtype="newest",limit=num_items)
-    else:
-        get_items(object_type="songs",object_id=object_id,object_subtype="album_songs")
+        #really necessary only for the first fime general.json is created
+        jsStor.load()
+        tempData = jsStor.getData()
 
+        addDir("Search...",0,4,"DefaultFolder.png")
+        addDir("Recent...",0,5,"DefaultFolder.png")
+        addDir("Random...",0,7,"DefaultFolder.png")
+        addDir("Various...",0,23,"DefaultFolder.png")
+        addDir("Artists (" + tempData["artists"]+ ")",None,1,"DefaultFolder.png")
+        addDir("Albums (" + tempData["albums"] + ")",None,2,"DefaultFolder.png")
+        addDir("Playlists (" + tempData["playlists"] + ")",None,13,"DefaultFolder.png")
+        addDir("Tags",None,18,"DefaultFolder.png")
 
-# search screen ( called from main screen )
+    #   artist list ( called from main screen  ( mode None ) , search
+    #   screen ( mode 4 ) and recent ( mode 5 )  )
 
-elif mode==4:
-    addDir("Search Artists...",9999999,1,"DefaultFolder.png")
-    addDir("Search Albums...",9999999,2,"DefaultFolder.png")
-    addDir("Search Songs...",9999999,3,"DefaultFolder.png")
-    addDir("Search Playlists...",9999999,13,"DefaultFolder.png")
-    addDir("Search All...",9999999,11,"DefaultFolder.png")
-    addDir("Search Tags...",9999999,18,"DefaultFolder.png")
-
-# recent additions screen ( called from main screen )
-
-elif mode==5:
-    addDir("Recent Artists...",9999998,6,"DefaultFolder.png")
-    addDir("Recent Albums...",9999997,6,"DefaultFolder.png")
-    addDir("Recent Songs...",9999996,6,"DefaultFolder.png")
-    addDir("Recent Playlists...",9999995,6,"DefaultFolder.png")
-
-#   screen with recent time possibilities ( subscreen of recent artists,
-#   recent albums, recent songs ) ( called from mode 5 )
-
-elif mode==6:
-    #not clean, but i don't want to change too much the old code
-    if object_id > 9999995:
-        #object_id for playlists is 9999995 so 9999999-object_id is 4 that is search mode
-        #i have to use another method, so i use the hardcoded mode number (13)
-        mode_new = 9999999-object_id
-    elif object_id == 9999995:
-        mode_new = 13
-    
-    addDir("Last Update",9999998,mode_new,"DefaultFolder.png")
-    addDir("1 Week",9999997,mode_new,"DefaultFolder.png")
-    addDir("1 Month",9999996,mode_new,"DefaultFolder.png")
-    addDir("3 Months",9999995,mode_new,"DefaultFolder.png")
-
-# general random mode screen ( called from main screen )
-
-elif mode==7:
-    addDir("Random Artists...",9999994,1,"DefaultFolder.png")
-    addDir("Random Albums...",9999994,2,"DefaultFolder.png")
-    addDir("Random Songs...",9999994,3,"DefaultFolder.png")
-    addDir("Random Playlists...",9999994,13,"DefaultFolder.png")
-
-#old mode 
-#
-#random mode screen ( display artists, albums or songs ) ( called from mode
-#   7  )
-#elif mode==8:
-#end old mode
-
-#   play track mode  ( mode set in add_links function )
-
-elif mode==9:
-    play_track(object_id)
-
-# mode 11 : search all
-elif mode==11:
-    do_search("songs","search_songs")
-
-# mode 12 : artist_songs
-elif mode==12:
-    get_items(object_type="songs",object_id=object_id,object_subtype="artist_songs" )
-
-#   playlist full list ( called from main screen )
-
-elif mode==13:
+    elif mode==1:
+        #artist, album, songs, playlist follow the same structure
+        #search function
+        num_items = (int(ampache.getSetting("random_items"))*3)+3
         if object_id == 9999999:
-            do_search("playlists")
+            do_search("artists")
+        #recent function
         elif object_id > 9999994 and object_id < 9999999:
-            get_recent( "playlists", object_id )
+            get_recent( "artists", object_id )
+        elif object_id == 9999994:
+            #removed cause nasty recursive call using some commands in web interface
+            #addDir("Refresh..",9999994,2,os.path.join(imagepath,'refresh_icon.png'))
+            get_random('artists')
+        elif object_id == 9999993:
+            get_stats(object_type="artists",object_subtype="hightest",limit=num_items)
+        elif object_id == 9999992:
+            get_stats(object_type="artists",object_subtype="frequent",limit=num_items)
+        elif object_id == 9999991:
+            get_stats(object_type="artists",object_subtype="flagged",limit=num_items)
+        elif object_id == 9999990:
+            get_stats(object_type="artists",object_subtype="forgotten",limit=num_items)
+        elif object_id == 9999989:
+            get_stats(object_type="artists",object_subtype="newest",limit=num_items)
+        #get all artists
+        else:
+            get_items("artists", limit=None, useCacheArt=False)
+           
+    #   albums list ( called from main screen ( mode None ) , search
+    #   screen ( mode 4 ) and recent ( mode 5 )  )
+
+    elif mode==2:
+        num_items = (int(ampache.getSetting("random_items"))*3)+3
+        if object_id == 9999999:
+            do_search("albums")
+        elif object_id > 9999994 and object_id < 9999999:
+            get_recent( "albums", object_id )
+        elif object_id == 9999994:
+            #removed cause nasty recursive call using some commands in web interface
+            #addDir("Refresh..",9999990,2,os.path.join(imagepath, 'refresh_icon.png'))
+            get_random('albums')
+        elif object_id == 9999993:
+            get_stats(object_type="albums",object_subtype="hightest",limit=num_items)
+        elif object_id == 9999992:
+            get_stats(object_type="albums",object_subtype="frequent",limit=num_items)
+        elif object_id == 9999991:
+            get_stats(object_type="albums",object_subtype="flagged",limit=num_items)
+        elif object_id == 9999990:
+            get_stats(object_type="albums",object_subtype="forgotten",limit=num_items)
+        elif object_id == 9999989:
+            get_stats(object_type="albums",object_subtype="newest",limit=num_items)
+        elif object_id:
+            get_items(object_type="albums",object_id=object_id,object_subtype="artist_albums")
+        #get all albums
+        else:
+            get_items("albums", limit=None, useCacheArt=False)
+
+    #   song mode ( called from search screen ( mode 4 ) and recent ( mode 5 )  )
+            
+    elif mode==3:
+        num_items = (int(ampache.getSetting("random_items"))*3)+3
+        if object_id == 9999999:
+            do_search("songs")
+        elif object_id > 9999994 and object_id < 9999999:
+            get_recent( "songs", object_id )
         elif object_id == 9999994:
             #removed cause nasty recursive call using some commands in web interface
             #addDir("Refresh..",9999994,2,os.path.join(imagepath, 'refresh_icon.png'))
-            get_random('playlists')
-        elif object_id:
-            get_items(object_type="playlists",object_id=object_id)
+            get_random('songs')
+        elif object_id == 9999993:
+            get_stats(object_type="songs",object_subtype="hightest",limit=num_items)
+        elif object_id == 9999992:
+            get_stats(object_type="songs",object_subtype="frequent",limit=num_items)
+        elif object_id == 9999991:
+            get_stats(object_type="songs",object_subtype="flagged",limit=num_items)
+        elif object_id == 9999990:
+            get_stats(object_type="songs",object_subtype="forgotten",limit=num_items)
+        elif object_id == 9999989:
+            get_stats(object_type="songs",object_subtype="newest",limit=num_items)
         else:
-            get_items(object_type="playlists")
+            get_items(object_type="songs",object_id=object_id,object_subtype="album_songs")
 
-#   playlist song mode
 
-elif mode==14:
-    get_items(object_type="songs",object_id=object_id,object_subtype="playlist_songs")
+    # search screen ( called from main screen )
 
-elif mode==15:
-    if xbmc.getCondVisibility("Window.IsActive(musicplaylist)"):
-        xbmc.executebuiltin("XBMC.ActivateWindow(%s)" % (win_id,))
-    get_items(object_type="artists",object_id=object_id,object_subtype="artist")
+    elif mode==4:
+        addDir("Search Artists...",9999999,1,"DefaultFolder.png")
+        addDir("Search Albums...",9999999,2,"DefaultFolder.png")
+        addDir("Search Songs...",9999999,3,"DefaultFolder.png")
+        addDir("Search Playlists...",9999999,13,"DefaultFolder.png")
+        addDir("Search All...",9999999,11,"DefaultFolder.png")
+        addDir("Search Tags...",9999999,18,"DefaultFolder.png")
 
-elif mode==16:
-    if xbmc.getCondVisibility("Window.IsActive(musicplaylist)"):
-        xbmc.executebuiltin("XBMC.ActivateWindow(%s)" % (win_id,))
-    get_items(object_type="albums",object_id=object_id,object_subtype="album")
+    # recent additions screen ( called from main screen )
 
-elif mode==17:
-    if xbmc.getCondVisibility("Window.IsActive(musicplaylist)"):
-        xbmc.executebuiltin("XBMC.ActivateWindow(%s)" % (win_id,))
-    do_search("songs",thisFilter=title)
+    elif mode==5:
+        addDir("Recent Artists...",9999998,6,"DefaultFolder.png")
+        addDir("Recent Albums...",9999997,6,"DefaultFolder.png")
+        addDir("Recent Songs...",9999996,6,"DefaultFolder.png")
+        addDir("Recent Playlists...",9999995,6,"DefaultFolder.png")
 
-elif mode==18:
-    addDir("Artist tags...",object_id,19)
-    addDir("Album tags...",object_id,20)
-    addDir("Song tags...",object_id,21)
+    #   screen with recent time possibilities ( subscreen of recent artists,
+    #   recent albums, recent songs ) ( called from mode 5 )
 
-elif mode==19:
-    if object_id == 9999999:
-        do_search("tags","tag_artists")
-    elif object_id:
-        get_items(object_type="artists", object_subtype="tag_artists",object_id=object_id)
-    else:
-        get_items(object_type = "tags", object_subtype="tag_artists")
+    elif mode==6:
+        #not clean, but i don't want to change too much the old code
+        if object_id > 9999995:
+            #object_id for playlists is 9999995 so 9999999-object_id is 4 that is search mode
+            #i have to use another method, so i use the hardcoded mode number (13)
+            mode_new = 9999999-object_id
+        elif object_id == 9999995:
+            mode_new = 13
+        
+        addDir("Last Update",9999998,mode_new,"DefaultFolder.png")
+        addDir("1 Week",9999997,mode_new,"DefaultFolder.png")
+        addDir("1 Month",9999996,mode_new,"DefaultFolder.png")
+        addDir("3 Months",9999995,mode_new,"DefaultFolder.png")
 
-elif mode==20:
-    if object_id == 9999999:
-        do_search("tags","tag_albums")
-    elif object_id:
-        get_items(object_type="albums", object_subtype="tag_albums",object_id=object_id)
-    else:
-        get_items(object_type = "tags", object_subtype="tag_albums")
+    # general random mode screen ( called from main screen )
 
-elif mode==21:
-    if object_id == 9999999:
-        do_search("tags","tag_songs")
-    elif object_id:
-        get_items(object_type="songs", object_subtype="tag_songs",object_id=object_id)
-    else:
-        get_items(object_type = "tags", object_subtype="tag_songs")
+    elif mode==7:
+        addDir("Random Artists...",9999994,1,"DefaultFolder.png")
+        addDir("Random Albums...",9999994,2,"DefaultFolder.png")
+        addDir("Random Songs...",9999994,3,"DefaultFolder.png")
+        addDir("Random Playlists...",9999994,13,"DefaultFolder.png")
 
-elif mode==23:
-    jsStor = json_storage.JsonStorage("general.json")
-    tempData = jsStor.getData()
+    #old mode 
+    #
+    #random mode screen ( display artists, albums or songs ) ( called from mode
+    #   7  )
+    #elif mode==8:
+    #end old mode
 
-    if(int(tempData["api-version"])) >= 400001:
-        addDir("Stats Artists...",9999999,24)
-    addDir("Stats Albums...",9999998,25)
-    if(int(tempData["api-version"])) >= 400001:
-        addDir("Stats Songs...",9999997,26)
+    #   play track mode  ( mode set in add_links function )
 
-elif mode==24:
-    addDir("Hightest Rated Artists...",9999993,1)
-    addDir("Frequent Artists...",9999992,1)
-    addDir("Flagged Artists...",9999991,1)
-    addDir("Forgotten Artists...",9999990,1)
-    addDir("Newest Artists...",9999989,1)
+    elif mode==9:
+        play_track(object_id)
 
-elif mode==25:
-    jsStor = json_storage.JsonStorage("general.json")
-    tempData = jsStor.getData()
+    # mode 11 : search all
+    elif mode==11:
+        do_search("songs","search_songs")
 
-    addDir("Hightest Rated Albums...",9999993,2)
-    addDir("Frequent Albums...",9999992,2)
-    addDir("Flagged Albums...",9999991,2)
-    if(int(tempData["api-version"])) >= 400001:
-        addDir("Forgotten Albums...",9999990,2)
-        addDir("Newest Albums...",9999989,2)
+    # mode 12 : artist_songs
+    elif mode==12:
+        get_items(object_type="songs",object_id=object_id,object_subtype="artist_songs" )
 
-elif mode==26:
-    addDir("Hightest Rated Songs...",9999993,3)
-    addDir("Frequent Songs...",9999992,3)
-    addDir("Flagged Songs...",9999991,3)
-    addDir("Forgotten Songs...",9999990,3)
-    addDir("Newest Songs...",9999989,3)
+    #   playlist full list ( called from main screen )
 
-if mode < 30:
-    xbmc.log("AmpachePlugin::endOfDirectory " + sys.argv[1],  xbmc.LOGDEBUG)
-    xbmcplugin.endOfDirectory(int(sys.argv[1]))
+    elif mode==13:
+            if object_id == 9999999:
+                do_search("playlists")
+            elif object_id > 9999994 and object_id < 9999999:
+                get_recent( "playlists", object_id )
+            elif object_id == 9999994:
+                #removed cause nasty recursive call using some commands in web interface
+                #addDir("Refresh..",9999994,2,os.path.join(imagepath, 'refresh_icon.png'))
+                get_random('playlists')
+            elif object_id:
+                get_items(object_type="playlists",object_id=object_id)
+            else:
+                get_items(object_type="playlists")
+
+    #   playlist song mode
+
+    elif mode==14:
+        get_items(object_type="songs",object_id=object_id,object_subtype="playlist_songs")
+
+    elif mode==15:
+        if xbmc.getCondVisibility("Window.IsActive(musicplaylist)"):
+            xbmc.executebuiltin("XBMC.ActivateWindow(%s)" % (win_id,))
+        get_items(object_type="artists",object_id=object_id,object_subtype="artist")
+
+    elif mode==16:
+        if xbmc.getCondVisibility("Window.IsActive(musicplaylist)"):
+            xbmc.executebuiltin("XBMC.ActivateWindow(%s)" % (win_id,))
+        get_items(object_type="albums",object_id=object_id,object_subtype="album")
+
+    elif mode==17:
+        if xbmc.getCondVisibility("Window.IsActive(musicplaylist)"):
+            xbmc.executebuiltin("XBMC.ActivateWindow(%s)" % (win_id,))
+        do_search("songs",thisFilter=title)
+
+    elif mode==18:
+        addDir("Artist tags...",object_id,19)
+        addDir("Album tags...",object_id,20)
+        addDir("Song tags...",object_id,21)
+
+    elif mode==19:
+        if object_id == 9999999:
+            do_search("tags","tag_artists")
+        elif object_id:
+            get_items(object_type="artists", object_subtype="tag_artists",object_id=object_id)
+        else:
+            get_items(object_type = "tags", object_subtype="tag_artists")
+
+    elif mode==20:
+        if object_id == 9999999:
+            do_search("tags","tag_albums")
+        elif object_id:
+            get_items(object_type="albums", object_subtype="tag_albums",object_id=object_id)
+        else:
+            get_items(object_type = "tags", object_subtype="tag_albums")
+
+    elif mode==21:
+        if object_id == 9999999:
+            do_search("tags","tag_songs")
+        elif object_id:
+            get_items(object_type="songs", object_subtype="tag_songs",object_id=object_id)
+        else:
+            get_items(object_type = "tags", object_subtype="tag_songs")
+
+    elif mode==23:
+        if(int(tempData["api-version"])) >= 400001:
+            addDir("Stats Artists...",9999999,24)
+        addDir("Stats Albums...",9999998,25)
+        if(int(tempData["api-version"])) >= 400001:
+            addDir("Stats Songs...",9999997,26)
+
+    elif mode==24:
+        addDir("Hightest Rated Artists...",9999993,1)
+        addDir("Frequent Artists...",9999992,1)
+        addDir("Flagged Artists...",9999991,1)
+        addDir("Forgotten Artists...",9999990,1)
+        addDir("Newest Artists...",9999989,1)
+
+    elif mode==25:
+        addDir("Hightest Rated Albums...",9999993,2)
+        addDir("Frequent Albums...",9999992,2)
+        addDir("Flagged Albums...",9999991,2)
+        if(int(tempData["api-version"])) >= 400001:
+            addDir("Forgotten Albums...",9999990,2)
+            addDir("Newest Albums...",9999989,2)
+
+    elif mode==26:
+        addDir("Hightest Rated Songs...",9999993,3)
+        addDir("Frequent Songs...",9999992,3)
+        addDir("Flagged Songs...",9999991,3)
+        addDir("Forgotten Songs...",9999990,3)
+        addDir("Newest Songs...",9999989,3)
+
+    if mode < 30:
+        xbmc.log("AmpachePlugin::endOfDirectory " + sys.argv[1],  xbmc.LOGDEBUG)
+        xbmcplugin.endOfDirectory(int(sys.argv[1]))
