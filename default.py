@@ -13,7 +13,8 @@ from resources.lib import json_storage
 
 ampache = xbmcaddon.Addon("plugin.audio.ampache")
 
-ampache_dir = xbmc.translatePath( ampache.getAddonInfo('path') )
+ampache_addon_path =  ampache.getAddonInfo('path')
+ampache_dir = xbmc.translatePath( ampache_addon_path )
 BASE_RESOURCE_PATH = os.path.join( ampache_dir, 'resources' )
 mediaDir = os.path.join( BASE_RESOURCE_PATH , 'media' )
 cacheDir = os.path.join( mediaDir , 'cache' )
@@ -550,14 +551,15 @@ if (__name__ == '__main__'):
         jsStor.load()
         tempData = jsStor.getData()
 
-        addDir("Search...",0,4,"DefaultFolder.png")
-        addDir("Recent...",0,5,"DefaultFolder.png")
-        addDir("Random...",0,7,"DefaultFolder.png")
-        addDir("Various...",0,23,"DefaultFolder.png")
+        addDir("Search...",None,4,"DefaultFolder.png")
+        addDir("Recent...",None,5,"DefaultFolder.png")
+        addDir("Random...",None,7,"DefaultFolder.png")
+        addDir("Various...",None,23,"DefaultFolder.png")
         addDir("Artists (" + tempData["artists"]+ ")",None,1,"DefaultFolder.png")
         addDir("Albums (" + tempData["albums"] + ")",None,2,"DefaultFolder.png")
         addDir("Playlists (" + tempData["playlists"] + ")",None,13,"DefaultFolder.png")
         addDir("Tags",None,18,"DefaultFolder.png")
+        addDir("Settings",None,27,"DefaultFolder.png")
 
     #   artist list ( called from main screen  ( mode None ) , search
     #   screen ( mode 4 ) and recent ( mode 5 )  )
@@ -800,7 +802,10 @@ if (__name__ == '__main__'):
         addDir("Flagged Songs...",9999991,3)
         addDir("Forgotten Songs...",9999990,3)
         addDir("Newest Songs...",9999989,3)
+        
+    elif mode==27:
+        ampache.openSettings()
 
-    if mode < 30:
+    if mode < 27:
         xbmc.log("AmpachePlugin::endOfDirectory " + sys.argv[1],  xbmc.LOGDEBUG)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
