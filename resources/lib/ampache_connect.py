@@ -88,14 +88,11 @@ class AmpacheConnect():
         except self.ConnectionError:
             xbmc.log("AmpachePlugin::AMPACHECONNECT ConnectionError",xbmc.LOGDEBUG)
             raise self.ConnectionError
-        try:
-            contents = response.read()
-            contents = contents.replace("\0", "")
-            xbmc.log("AmpachePlugin::AMPACHECONNECT: contents " + contents, xbmc.LOGDEBUG)
-        except:
-            pass
+        contents = response.read()
+        xbmc.log("AmpachePlugin::AMPACHECONNECT: contents " + contents, xbmc.LOGDEBUG)
+        tree=ET.XML(contents)
         xbmc.log("AmpachePlugin::AMPACHECONNECT ConnectionOk",xbmc.LOGDEBUG)
-        tree=ET.parse(response)
+        #tree=ET.parse(response)
         response.close()
         elem = tree.getroot()
         token = elem.findtext('auth')
