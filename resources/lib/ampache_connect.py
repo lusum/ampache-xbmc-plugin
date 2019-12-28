@@ -2,8 +2,7 @@ import hashlib
 import ssl
 import socket
 import time, urllib,urllib2
-import xbmc
-import xbmcaddon
+import xbmc, xbmcaddon
 import sys
 import xml.etree.ElementTree as ET
 
@@ -76,12 +75,21 @@ class AmpacheConnect():
     def AMPACHECONNECT(self):
         jsStor = json_storage.JsonStorage("general.json")
         tempData = {}
+        tempData["api-version"] = 350001
+        tempData["artists"] = ""
+        tempData["albums"] = ""
+        tempData["songs"] = ""
+        tempData["playlists"] = ""
+        tempData["add"] = ""
+        jsStor.save(tempData)
         socket.setdefaulttimeout(3600)
         nTime = int(time.time())
         use_api_key = self._ampache.getSetting("use_api_key")
         if self.str_to_bool(use_api_key):
-            myURL = self.get_auth_key_login_url() 
+            xbmc.log("AmpachePlugin::AMPACHECONNECT api_key",xbmc.LOGDEBUG)
+            myURL = self.get_auth_key_login_url()
         else: 
+            xbmc.log("AmpachePlugin::AMPACHECONNECT login password",xbmc.LOGDEBUG)
             myURL = self.get_user_pwd_login_url(nTime)
         try:
             response = self.handle_request(myURL)
@@ -92,9 +100,15 @@ class AmpacheConnect():
         tree=ET.parse(response)
         response.close()
         elem = tree.getroot()
-        xbmc.log("AmpachePlugin::AMPACHECONNECT contents " + ET.tostring(elem, encoding='utf8').decode('utf8'))
+        xbmc.log("AmpachePlugin::AMPACHECONNECT contents " + ET.tostring(elem, encoding='utf8').decode('utf8'),xbmc.LOGDEBUG)
+        if tree.findtext("error"):
+            errornode = tree.find("error")
+            if errornode.attrib["code"]=="401":
+                errormess = elem.findtext('error')
+                if "time" in errormess:
+                    xbmc.executebuiltin("Notification(Error,If you are using Nextcloud don't check api_key box)")
+            return
         token = elem.findtext('auth')
-        xbmc.log("AmpachePlugin::AMPACHECONNECT token " + token,xbmc.LOGDEBUG)
         version = elem.findtext('api')
         if not version:
         #old api

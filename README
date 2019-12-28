@@ -5,3 +5,7 @@ ampache-xbmc-plugin
 	If you want to use it, zip it up and add it to your XBMC/KODI via System->AddOns->Install from ZIP.
 	
 	In the new version of KODI you have to do AddOns->Addon Icon ( top/left in Kodi default Skin )->Install from ZIP.
+	
+	
+	Troubleshooting:
+        Nextcloud music don't use api-key, but username/password, if you have problems to connect unckeck api_key box
