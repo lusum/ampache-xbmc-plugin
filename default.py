@@ -305,6 +305,13 @@ def get_time(time_offset):
 def get_items(object_type, object_id=None, add=None,
         thisFilter=None,limit=5000,useCacheArt=True, object_subtype=None, exact=None ):
     
+    if not object_type:
+        xbmc.log("AmpachePlugin::get_items: object_type set to None" , xbmc.LOGDEBUG)
+    
+    xbmc.log("AmpachePlugin::get_items: object_type " + object_type, xbmc.LOGDEBUG)
+    if object_subtype:
+        xbmc.log("AmpachePlugin::get_items: object_subtype " + object_subtype, xbmc.LOGDEBUG)
+
     jsStor = json_storage.JsonStorage("general.json")
     tempData = jsStor.getData()
     
@@ -313,10 +320,6 @@ def get_items(object_type, object_id=None, add=None,
     mode = None
 
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
-    xbmc.log("AmpachePlugin::get_items: object_type " + object_type, xbmc.LOGDEBUG)
-    if object_subtype:
-        xbmc.log("AmpachePlugin::get_items: object_subtype " + object_subtype, xbmc.LOGDEBUG)
-
     #default: object_type is the action,otherwise see the if list below
     action = object_type
     

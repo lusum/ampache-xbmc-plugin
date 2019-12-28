@@ -63,12 +63,12 @@ class AmpacheConnect():
             if self.str_to_bool(ssl_certs_str):
                 gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
                 response = urllib2.urlopen(req, context=gcontext, timeout=400)
-                xbmc.log("AmpachePlugin::AmpacheConnect: ssl",xbmc.LOGDEBUG)
+                xbmc.log("AmpachePlugin::handle_request: ssl",xbmc.LOGDEBUG)
             else:
                 response = urllib2.urlopen(req, timeout=400)
-                xbmc.log("AmpachePlugin::AmpacheConnect: nossl",xbmc.LOGDEBUG)
+                xbmc.log("AmpachePlugin::handle_request: nossl",xbmc.LOGDEBUG)
         except:
-            xbmc.log("AmpachePlugin::ConnectionError",xbmc.LOGDEBUG)
+            xbmc.log("AmpachePlugin::handle_request ConnectionError",xbmc.LOGDEBUG)
             xbmc.executebuiltin("ConnectionError" )
             raise self.ConnectionError
         return response
@@ -86,7 +86,9 @@ class AmpacheConnect():
         try:
             response = self.handle_request(myURL)
         except self.ConnectionError:
+            xbmc.log("AmpachePlugin::AMPACHECONNECT ConnectionError",xbmc.LOGDEBUG)
             raise self.ConnectionError
+        xbmc.log("AmpachePlugin::AMPACHECONNECT ConnectionOk",xbmc.LOGDEBUG)
         tree=ET.parse(response)
         response.close()
         elem = tree.getroot()
