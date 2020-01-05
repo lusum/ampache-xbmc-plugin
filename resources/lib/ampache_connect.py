@@ -31,8 +31,11 @@ class AmpacheConnect():
   
     def get_user_pwd_login_url(self,nTime):
         myTimeStamp = str(nTime)
-        sdf = self._connectionData["password"]
-        #sdf = self._ampache.getSetting("password")
+        enablePass = self._connectionData["enable_password"]
+        if enablePass:
+            sdf = self._connectionData["password"]
+        else:
+            sdf = ""
         hasher = hashlib.new('sha256')
         hasher.update(sdf)
         myKey = hasher.hexdigest()
