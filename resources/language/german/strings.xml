@@ -1,10 +1,5 @@
 <strings>
-    <string id="30000">Ampache-Server URL</string>
-    <string id="30001">Benutzername</string>
-    <string id="30002">Passwort</string>
-    <string id="30003">Benutze API Key anstatt Benutzername/Passwort</string>
-    <string id="30004">API Key</string>
-    <string id="30008">Anzahl zufälliger Alben</string>
-    <string id="30009">Token</string>
-    <string id="30010">Token Ablaufdatum</string>
+    <string id="30018">Anzahl zufälliger Alben</string>
+    <string id="30019">Token</string>
+    <string id="30020">Token Ablaufdatum</string>
 </strings>

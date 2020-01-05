@@ -8,6 +8,7 @@ import xbmcaddon
 
 from resources.lib import ampache_connect
 from resources.lib import json_storage
+from resources.lib import servers_manager
 from resources.lib import gui
 
 # Shared resources
@@ -531,10 +532,12 @@ if (__name__ == '__main__'):
             pass
 
 
-    ampacheConnect = ampache_connect.AmpacheConnect()
-
     jsStor = json_storage.JsonStorage("general.json")
     tempData = jsStor.getData()
+    
+    servers_manager.initialiseServer()
+    
+    ampacheConnect = ampache_connect.AmpacheConnect()
 
     if mode==None:
         try:
@@ -546,7 +549,7 @@ if (__name__ == '__main__'):
         addDir("Quick access...",None,25,"DefaultFolder.png")
         addDir("Explore...",None,23,"DefaultFolder.png")
         addDir("Library...",None,24,"DefaultFolder.png")
-        #addDir("Switch server",None,44,"DefaultFolder.png")
+        addDir("Switch server",None,44,"DefaultFolder.png")
         addDir("Settings",None,40,"DefaultFolder.png")
         
     #   artist list ( called from main screen  ( mode None ) , search
@@ -814,6 +817,20 @@ if (__name__ == '__main__'):
     elif mode==40:
         ampache.openSettings()
 
+    elif mode==41:
+        if servers_manager.addServer():
+            servers_manager.switchServer()
+    
+    elif mode==42:
+        if servers_manager.deleteServer():
+            servers_manager.switchServer()
+    
+    elif mode==43:
+        servers_manager.modifyServer()
+    
+    elif mode==44:
+        servers_manager.switchServer()
+            
     if mode < 40:
         xbmc.log("AmpachePlugin::endOfDirectory " + sys.argv[1],  xbmc.LOGDEBUG)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))

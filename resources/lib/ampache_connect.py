@@ -7,6 +7,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 from resources.lib import json_storage
+from resources.lib import utils
 
 class AmpacheConnect():
     
@@ -15,6 +16,10 @@ class AmpacheConnect():
     
     def __init__(self):
         self._ampache = xbmcaddon.Addon("plugin.audio.ampache")
+        jsStorServer = json_storage.JsonStorage("servers.json")
+        serverStorage = jsStorServer.getData()
+        self._connectionData = serverStorage["servers"][serverStorage["current_server"]]
+        #self._connectionData = None
         self.filter=None
         self.add=None
         self.limit=5000
@@ -23,34 +28,25 @@ class AmpacheConnect():
         self.exact=None 
         self.mode=None
         self.id=None
-    
-    #   string to bool function : from string 'true' or 'false' to boolean True or
-    #   False, raise ValueError
-    def str_to_bool(self,s):
-        if s == 'true':
-            return True
-        elif s == 'false':
-            return False
-        else:
-            raise ValueError
-   
+  
     def get_user_pwd_login_url(self,nTime):
         myTimeStamp = str(nTime)
-        sdf = self._ampache.getSetting("password")
+        sdf = self._connectionData["password"]
+        #sdf = self._ampache.getSetting("password")
         hasher = hashlib.new('sha256')
-        hasher.update(self._ampache.getSetting("password"))
+        hasher.update(sdf)
         myKey = hasher.hexdigest()
         hasher = hashlib.new('sha256')
         hasher.update(myTimeStamp + myKey)
         myPassphrase = hasher.hexdigest()
-        myURL = self._ampache.getSetting("server") + '/server/xml.server.php?action=handshake&auth='
+        myURL = self._connectionData["url"] + '/server/xml.server.php?action=handshake&auth='
         myURL += myPassphrase + "&timestamp=" + myTimeStamp
-        myURL += '&version=' + self._ampache.getSetting("api-version") + '&user=' + self._ampache.getSetting("username")
+        myURL += '&version=' + self._ampache.getSetting("api-version") + '&user=' + self._connectionData["username"]
         return myURL
 
     def get_auth_key_login_url(self):
-        myURL = self._ampache.getSetting("server") + '/server/xml.server.php?action=handshake&auth='
-        myURL += self._ampache.getSetting("api_key")
+        myURL = self._connectionData["server"] + '/server/xml.server.php?action=handshake&auth='
+        myURL += self._connectionData("api_key")
         myURL += '&version=' + self._ampache.getSetting("api-version")
         return myURL
 
@@ -59,7 +55,7 @@ class AmpacheConnect():
             xbmc.log(url,xbmc.LOGNOTICE)
             req = urllib2.Request(url)
             ssl_certs_str = self._ampache.getSetting("disable_ssl_certs")
-            if self.str_to_bool(ssl_certs_str):
+            if utils.strBool_to_bool(ssl_certs_str):
                 gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
                 response = urllib2.urlopen(req, context=gcontext, timeout=400)
                 xbmc.log("AmpachePlugin::handle_request: ssl",xbmc.LOGDEBUG)
@@ -81,11 +77,10 @@ class AmpacheConnect():
         tempData["songs"] = ""
         tempData["playlists"] = ""
         tempData["add"] = ""
-        jsStor.save(tempData)
         socket.setdefaulttimeout(3600)
         nTime = int(time.time())
-        use_api_key = self._ampache.getSetting("use_api_key")
-        if self.str_to_bool(use_api_key):
+        use_api_key = self._connectionData["use_api_key"]
+        if utils.strBool_to_bool(use_api_key):
             xbmc.log("AmpachePlugin::AMPACHECONNECT api_key",xbmc.LOGDEBUG)
             myURL = self.get_auth_key_login_url()
         else: 
@@ -107,6 +102,9 @@ class AmpacheConnect():
                 errormess = elem.findtext('error')
                 if "time" in errormess:
                     xbmc.executebuiltin("Notification(Error,If you are using Nextcloud don't check api_key box)")
+                else:
+                    xbmc.executebuiltin("Notification(Error,Connection error)")
+            raise self.ConnectionError
             return
         token = elem.findtext('auth')
         version = elem.findtext('api')
@@ -168,7 +166,7 @@ class AmpacheConnect():
                 return
 
         token=self._ampache.getSetting('token')    
-        thisURL = self._ampache.getSetting("server") + '/server/xml.server.php?action=' + action 
+        thisURL = self._connectionData["url"] + '/server/xml.server.php?action=' + action 
         thisURL += '&auth=' + token
         thisURL += '&limit=' +str(self.limit)
         thisURL += '&offset=' +str(self.offset)
@@ -185,8 +183,4 @@ class AmpacheConnect():
         if self.id:
             thisURL += '&id=' + self.id
         return thisURL
-
-
-
-
 

@@ -1,12 +1,15 @@
 <settings>
-   <setting id="server" type="text" label="30000" default="http://127.0.0.1/ampache/"/>
-   <setting id="username" type="text" label="30001" default="ampache"/>
-	 <setting id="password" type="text" label="30002" default="ampache"/>
-   <setting id="use_api_key" type="bool" label="30003" default="false"/>
-   <setting id="api_key" type="text" label="30004" default=""/>
-   <setting id="api-version" type="number" label="30005" default="350001"/>
-   <setting id="random_items" type="enum" label="30008" values="3|6|9|12|15|18|21" default="1"/>
-   <setting id="token" type="text" label="30009" />
-	 <setting id="token-exp" type="text" label="30010" />
-	 <setting id="disable_ssl_certs" type="bool" label="30011" default="false"/>
-</settings>
+    <category label="30000">
+   <setting id="random_items" type="enum" label="30018" values="3|6|9|12|15|18|21" default="1"/>
+   <setting id="token" type="text" label="30019" />
+	 <setting id="token-exp" type="text" label="30020" />
+	 <setting id="disable_ssl_certs" type="bool" label="30021" default="false"/>
+   <setting id="api-version" type="number" label="30022" default="350001"/>
+     </category>
+  <category label="30100">
+        <setting id="server.add" type="action" label="30101" action="RunPlugin(plugin://plugin.audio.ampache-dev/?mode=41)"/>
+        <setting id="server.remove" type="action" label="30102" action="RunPlugin(plugin://plugin.audio.ampache-dev/?mode=42)"/>
+        <setting id="server.modify" type="action" label="30103" action="RunPlugin(plugin://plugin.audio.ampache-dev/?mode=43)"/>
+        <setting id="server.switch" type="action" label="30105" action="RunPlugin(plugin://plugin.audio.ampache-dev/?mode=44)"/>
+  </category>
+</settings>  
