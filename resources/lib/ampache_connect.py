@@ -77,6 +77,8 @@ class AmpacheConnect():
         tempData["songs"] = ""
         tempData["playlists"] = ""
         tempData["add"] = ""
+        tempData["token"] = ""
+        tempData["token-exp"] = ""
         socket.setdefaulttimeout(3600)
         nTime = int(time.time())
         use_api_key = self._connectionData["use_api_key"]
@@ -118,9 +120,9 @@ class AmpacheConnect():
         tempData["songs"] = elem.findtext("songs")
         tempData["playlists"] = elem.findtext("playlists")
         tempData["add"] = elem.findtext("add")
+        tempData["token"] = token
+        tempData["token-exp"] = str(nTime+24000)
         jsStor.save(tempData)
-        self._ampache.setSetting('token',token)
-        self._ampache.setSetting('token-exp',str(nTime+24000))
         return elem
 
     def ampache_http_request(self,action):
@@ -157,7 +159,9 @@ class AmpacheConnect():
         return tree
     
     def build_ampache_url(self,action):
-        tokenexp = int(self._ampache.getSetting('token-exp'))
+        jsStor = json_storage.JsonStorage("general.json")
+        tempData = jsStor.getData()
+        tokenexp = int(tempData["token-exp"])
         if int(time.time()) > tokenexp:
             xbmc.log("refreshing token...", xbmc.LOGNOTICE )
             try:
@@ -165,7 +169,7 @@ class AmpacheConnect():
             except:
                 return
 
-        token=self._ampache.getSetting('token')    
+        token=tempData["token"]
         thisURL = self._connectionData["url"] + '/server/xml.server.php?action=' + action 
         thisURL += '&auth=' + token
         thisURL += '&limit=' +str(self.limit)

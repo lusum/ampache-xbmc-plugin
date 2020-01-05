@@ -1,8 +1,6 @@
 <strings>
     <string id="30000">General</string>
     <string id="30018">Number of items ( random and stats )</string>
-    <string id="30019">Token</string>
-    <string id="30020">Token expiration</string>
     <string id="30021">Disable SSL certificate verification ( DANGEROUS )</string>
     <string id="30022">Api version</string>
     <string id="30100">Servers</string>
