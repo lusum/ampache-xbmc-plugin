@@ -9,9 +9,8 @@ class JsonStorage():
 
     def __init__(self,filename):
         ampache = xbmcaddon.Addon("plugin.audio.ampache")
-        ampache_dir = xbmc.translatePath( ampache.getAddonInfo('path') )
-        self._BASE_RESOURCE_PATH = os.path.join( ampache_dir, 'resources' )
-        self._filename = os.path.join(self._BASE_RESOURCE_PATH, filename)
+        base_dir = xbmc.translatePath( ampache.getAddonInfo('profile')).decode('utf-8')
+        self._filename = os.path.join(base_dir, filename)
         self._data = dict()
         self.load()
 

@@ -13,7 +13,7 @@ from resources.lib import json_storage
 
 ampache = xbmcaddon.Addon("plugin.audio.ampache")
 
-ampache_addon_path =  ampache.getAddonInfo('path')
+ampache_addon_path =  ampache.getAddonInfo('path').decode('utf-8')
 ampache_dir = xbmc.translatePath( ampache_addon_path )
 BASE_RESOURCE_PATH = os.path.join( ampache_dir, 'resources' )
 mediaDir = os.path.join( BASE_RESOURCE_PATH , 'media' )
@@ -152,7 +152,7 @@ def addSongLinks(elem):
             artist_elem = node.find("artist")
             artist_id = int(artist_elem.attrib["id"])
             cm.append( ( "Show artist from this song",
-            "XBMC.Container.Update(%s?object_id=%s&mode=15&win_id=%s)" % (
+            "Container.Update(%s?object_id=%s&mode=15&win_id=%s)" % (
                 sys.argv[0],artist_id, curr_win_id ) ) )
         except:
             pass
@@ -161,7 +161,7 @@ def addSongLinks(elem):
             album_elem = node.find("album")
             album_id = int(album_elem.attrib["id"])
             cm.append( ( "Show album from this song",
-            "XBMC.Container.Update(%s?object_id=%s&mode=16&win_id=%s)" % (
+            "Container.Update(%s?object_id=%s&mode=16&win_id=%s)" % (
                 sys.argv[0],album_id, curr_win_id ) ) )
         except:
             pass
@@ -170,7 +170,7 @@ def addSongLinks(elem):
             song_elem = node.find("song")
             song_title = unicode(node.findtext("title"))
             cm.append( ( "Search all songs with this title",
-            "XBMC.Container.Update(%s?title=%s&mode=17&win_id=%s)" % (
+            "Container.Update(%s?title=%s&mode=17&win_id=%s)" % (
                 sys.argv[0],song_title, curr_win_id ) ) )
         except:
             pass
@@ -225,7 +225,7 @@ def addDir(name,object_id,mode,iconImage=None,elem=None,infoLabels=None):
         artist_elem = elem.find("artist")
         artist_id = int(artist_elem.attrib["id"]) 
         cm = []
-        cm.append( ( "Show all albums from artist", "XBMC.Container.Update(%s?object_id=%s&mode=2)" % ( sys.argv[0],artist_id ) ) )
+        cm.append( ( "Show all albums from artist", "Container.Update(%s?object_id=%s&mode=2)" % ( sys.argv[0],artist_id ) ) )
         liz.addContextMenuItems(cm)
     except:
         pass
@@ -734,17 +734,17 @@ if (__name__ == '__main__'):
 
     elif mode==15:
         if xbmc.getCondVisibility("Window.IsActive(musicplaylist)"):
-            xbmc.executebuiltin("XBMC.ActivateWindow(%s)" % (win_id,))
+            xbmc.executebuiltin("ActivateWindow(%s)" % (win_id,))
         get_items(object_type="artists",object_id=object_id,object_subtype="artist")
 
     elif mode==16:
         if xbmc.getCondVisibility("Window.IsActive(musicplaylist)"):
-            xbmc.executebuiltin("XBMC.ActivateWindow(%s)" % (win_id,))
+            xbmc.executebuiltin("ActivateWindow(%s)" % (win_id,))
         get_items(object_type="albums",object_id=object_id,object_subtype="album")
 
     elif mode==17:
         if xbmc.getCondVisibility("Window.IsActive(musicplaylist)"):
-            xbmc.executebuiltin("XBMC.ActivateWindow(%s)" % (win_id,))
+            xbmc.executebuiltin("ActivateWindow(%s)" % (win_id,))
         do_search("songs",thisFilter=title)
 
     elif mode==18:
