@@ -92,23 +92,23 @@ def addServer():
     tempd = {}
     tempd[stnum] = {}
     serverData["servers"].update(tempd)
-    servername = gui.getFilterFromUser('Name?')
+    servername = gui.getFilterFromUser('Enter the Name')
     if servername == False:
         return False
-    url = gui.getFilterFromUser('Url?')
+    url = gui.getFilterFromUser('Enter the url of the server')
     if url == False:
         return False
     dialog = xbmcgui.Dialog()
     is_api_key = dialog.yesno('Use api Key?','Do you want to use an api-key?')
     if is_api_key == True:
-        apikey = gui.getFilterFromUser('Api key?')
+        apikey = gui.getFilterFromUser('Enter the Api key')
         if apikey == False:
             return False
     else:
-        username = gui.getFilterFromUser('Username?')
+        username = gui.getFilterFromUser('Enter the username')
         if username == False:
             return False
-        password = gui.getFilterFromUser('Password?')
+        password = gui.getFilterFromUser('Enter the password')
         if password == False:
             return False
     serverData["servers"][stnum]["name"] = servername
