@@ -8,6 +8,7 @@ import xbmcaddon
 
 from resources.lib import ampache_connect
 from resources.lib import json_storage
+from resources.lib import gui
 
 # Shared resources
 
@@ -267,34 +268,6 @@ def addItem( object_type, mode , elem, useCacheArt=True):
     elif object_type == 'songs':
         addSongLinks(elem)
 
-def get_params():
-    xbmc.log("AmpachePlugin::get_params " + sys.argv[2], xbmc.LOGDEBUG)
-    param=[]
-    paramstring=sys.argv[2]
-    if len(paramstring)>=2:
-            params=sys.argv[2]
-            cleanedparams=params.replace('?','')
-            if (params[len(params)-1]=='/'):
-                    params=params[0:len(params)-2]
-            pairsofparams=cleanedparams.split('&')
-            param={}
-            for i in range(len(pairsofparams)):
-                    splitparams={}
-                    splitparams=pairsofparams[i].split('=')
-                    if (len(splitparams))==2:
-                            param[splitparams[0]]=splitparams[1]
-                            
-    return param
-    
-def getFilterFromUser():
-    kb =  xbmcgui.Dialog()
-    result = kb.input('', type=xbmcgui.INPUT_ALPHANUM)
-    if result:
-        thisFilter = result
-    else:
-        return False
-    return(thisFilter)
-
 def get_time(time_offset):
     d = datetime.date.today()
     dt = datetime.timedelta(days=time_offset)
@@ -313,7 +286,7 @@ def get_items(object_type, object_id=None, add=None,
 
     jsStor = json_storage.JsonStorage("general.json")
     tempData = jsStor.getData()
-    
+
     if limit == None:
         limit = int(tempData[object_type])
     mode = None
@@ -383,7 +356,7 @@ def get_items(object_type, object_id=None, add=None,
 
 def do_search(object_type,object_subtype=None,thisFilter=None):
     if not thisFilter:
-        thisFilter = getFilterFromUser()
+        thisFilter = gui.getFilterFromUser()
     if thisFilter:
         get_items(object_type=object_type,thisFilter=thisFilter,object_subtype=object_subtype)
 
@@ -501,8 +474,27 @@ def get_random(object_type):
    
         for el in elements:
             addItem( object_type, mode , el)
-
-
+        
+def get_params():
+    xbmc.log("AmpachePlugin::get_params 0 " + sys.argv[0], xbmc.LOGDEBUG)
+    xbmc.log("AmpachePlugin::get_params 1 " + sys.argv[1], xbmc.LOGDEBUG)
+    xbmc.log("AmpachePlugin::get_params 2 " + sys.argv[2], xbmc.LOGDEBUG)
+    param=[]
+    paramstring=sys.argv[2]
+    if len(paramstring)>=2:
+            params=sys.argv[2]
+            cleanedparams=params.replace('?','')
+            if (params[len(params)-1]=='/'):
+                    params=params[0:len(params)-2]
+            pairsofparams=cleanedparams.split('&')
+            param={}
+            for i in range(len(pairsofparams)):
+                    splitparams={}
+                    splitparams=pairsofparams[i].split('=')
+                    if (len(splitparams))==2:
+                            param[splitparams[0]]=splitparams[1]
+                            
+    return param
 
 if (__name__ == '__main__'):
     params=get_params()
@@ -511,7 +503,7 @@ if (__name__ == '__main__'):
     object_id=None
     win_id=None
     title=None
-
+    
     try:
             name=urllib.unquote_plus(params["name"])
             xbmc.log("AmpachePlugin::name " + name, xbmc.LOGDEBUG)
@@ -540,6 +532,7 @@ if (__name__ == '__main__'):
 
 
     ampacheConnect = ampache_connect.AmpacheConnect()
+
     jsStor = json_storage.JsonStorage("general.json")
     tempData = jsStor.getData()
 
