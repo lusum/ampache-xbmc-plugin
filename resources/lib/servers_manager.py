@@ -19,6 +19,7 @@ def initialiseServer():
         serverData["servers"]["0"]["name"] = "ampache"
         serverData["servers"]["0"]["url"] = "http://127.0.0.1/ampache"
         serverData["servers"]["0"]["use_api_key"] = "false"
+        serverData["servers"]["0"]["enable_password"] = "true"
         serverData["servers"]["0"]["username"] = "ampache"
         serverData["servers"]["0"]["password"] = "ampache"
         serverData["servers"]["0"]["api_key"] = ""
@@ -49,7 +50,7 @@ def serversDialog(data,title=''):
 
 def showServerData(data,title='Modify the data, cancel to exit'):
     padding_size = 20
-    ordlist = ["name","username","password","url","use_api_key","api_key"]
+    ordlist = ["name","url","username","enable_password","password","use_api_key","api_key"]
     templist = []
     showlist = []
     dialog = xbmcgui.Dialog()
@@ -83,6 +84,7 @@ def switchServer():
         pass
 
 def addServer():
+    xbmc.log("AmpachePlugin::addServer" , xbmc.LOGDEBUG )
     jsStorServer = json_storage.JsonStorage("servers.json")
     serverData = jsStorServer.getData()
     stnum = len(list(serverData["servers"]))
@@ -108,13 +110,16 @@ def addServer():
         username = gui.getFilterFromUser('Enter the username')
         if username == False:
             return False
-        password = gui.getFilterFromUser('Enter the password')
-        if password == False:
-            return False
+        enablepassword = dialog.yesno('Use password?','The server needs a password?')
+        if enablepassword == True:
+            password = gui.getFilterFromUser('Enter the password')
+            if password == False:
+                return False
     serverData["servers"][stnum]["name"] = servername
     serverData["servers"][stnum]["url"] = url
     serverData["servers"][stnum]["use_api_key"] = utils.int_to_strBool(is_api_key)
     serverData["servers"][stnum]["username"] = username
+    serverData["servers"][stnum]["enable_password"] = enablepassword
     serverData["servers"][stnum]["password"] = password
     serverData["servers"][stnum]["api_key"] = apikey
     jsStorServer.save(serverData)
@@ -144,6 +149,11 @@ def modifyServer():
         elif key == "use_api_key":
             dialog = xbmcgui.Dialog()
             value_int = dialog.yesno('Use api Key?','Do you want to use an api-key?')
+            value = utils.int_to_strBool(value_int)
+            print value
+        elif key == "enable_password":
+            dialog = xbmcgui.Dialog()
+            value_int = dialog.yesno('Use password?','The server needs a password?')
             value = utils.int_to_strBool(value_int)
             print value
         else:
