@@ -549,20 +549,13 @@ if (__name__ == '__main__'):
         except:
             elem = ET.Element("")
         
-        #really necessary only for the first fime general.json is created
-        jsStor.load()
-        tempData = jsStor.getData()
-
         addDir("Search...",None,4,"DefaultFolder.png")
-        addDir("Recent...",None,5,"DefaultFolder.png")
-        addDir("Random...",None,7,"DefaultFolder.png")
-        addDir("Various...",None,23,"DefaultFolder.png")
-        addDir("Artists (" + tempData["artists"]+ ")",None,1,"DefaultFolder.png")
-        addDir("Albums (" + tempData["albums"] + ")",None,2,"DefaultFolder.png")
-        addDir("Playlists (" + tempData["playlists"] + ")",None,13,"DefaultFolder.png")
-        addDir("Tags",None,18,"DefaultFolder.png")
-        addDir("Settings",None,27,"DefaultFolder.png")
-
+        addDir("Quick access...",None,25,"DefaultFolder.png")
+        addDir("Explore...",None,23,"DefaultFolder.png")
+        addDir("Library...",None,24,"DefaultFolder.png")
+        #addDir("Switch server",None,44,"DefaultFolder.png")
+        addDir("Settings",None,40,"DefaultFolder.png")
+        
     #   artist list ( called from main screen  ( mode None ) , search
     #   screen ( mode 4 ) and recent ( mode 5 )  )
 
@@ -777,37 +770,57 @@ if (__name__ == '__main__'):
             get_items(object_type = "tags", object_subtype="tag_songs")
 
     elif mode==23:
+        addDir("Recent...",None,5,"DefaultFolder.png")
+        addDir("Random...",None,7,"DefaultFolder.png")
         if(int(tempData["api-version"])) >= 400001:
-            addDir("Stats Artists...",9999999,24)
-        addDir("Stats Albums...",9999998,25)
-        if(int(tempData["api-version"])) >= 400001:
-            addDir("Stats Songs...",9999997,26)
+            addDir("Hightest Rated...",9999993,30)
+            addDir("Frequent...",9999992,31)
+            addDir("Flagged...",9999991,32)
+            addDir("Forgotten...",9999990,33)
+            addDir("Newest...",9999989,34)
 
     elif mode==24:
-        addDir("Hightest Rated Artists...",9999993,1)
-        addDir("Frequent Artists...",9999992,1)
-        addDir("Flagged Artists...",9999991,1)
-        addDir("Forgotten Artists...",9999990,1)
-        addDir("Newest Artists...",9999989,1)
-
+        addDir("Artists (" + tempData["artists"]+ ")",None,1,"DefaultFolder.png")
+        addDir("Albums (" + tempData["albums"] + ")",None,2,"DefaultFolder.png")
+        addDir("Playlists (" + tempData["playlists"] + ")",None,13,"DefaultFolder.png")
+        addDir("Tags",None,18,"DefaultFolder.png")
+    
     elif mode==25:
-        addDir("Hightest Rated Albums...",9999993,2)
-        addDir("Frequent Albums...",9999992,2)
-        addDir("Flagged Albums...",9999991,2)
+        addDir("Recent Albums...",9999997,6,"DefaultFolder.png")
+        addDir("Random Albums...",9999994,2,"DefaultFolder.png")
         if(int(tempData["api-version"])) >= 400001:
-            addDir("Forgotten Albums...",9999990,2)
             addDir("Newest Albums...",9999989,2)
+            addDir("Frequent Albums...",9999992,2)
+        addDir("Server playlist...",9999994,3,"DefaultFolder.png")
 
-    elif mode==26:
+    elif mode==30:
+        addDir("Hightest Rated Artists...",9999993,1)
+        addDir("Hightest Rated Albums...",9999993,2)
         addDir("Hightest Rated Songs...",9999993,3)
+
+    elif mode==31:
+        addDir("Frequent Artists...",9999992,1)
+        addDir("Frequent Albums...",9999992,2)
         addDir("Frequent Songs...",9999992,3)
+
+    elif mode==32:
+        addDir("Flagged Albums...",9999991,2)
         addDir("Flagged Songs...",9999991,3)
+        addDir("Flagged Artists...",9999991,1)
+
+    elif mode==33:
+        addDir("Forgotten Artists...",9999990,1)
+        addDir("Forgotten Albums...",9999990,2)
         addDir("Forgotten Songs...",9999990,3)
+    
+    elif mode==34:
+        addDir("Newest Artists...",9999989,1)
+        addDir("Newest Albums...",9999989,2)
         addDir("Newest Songs...",9999989,3)
-        
-    elif mode==27:
+    
+    elif mode==40:
         ampache.openSettings()
 
-    if mode < 27:
+    if mode < 40:
         xbmc.log("AmpachePlugin::endOfDirectory " + sys.argv[1],  xbmc.LOGDEBUG)
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
