@@ -125,6 +125,7 @@ class AmpacheConnect():
         tempData["add"] = elem.findtext("add")
         tempData["token"] = token
         tempData["token-exp"] = str(nTime+24000)
+        xbmc.executebuiltin("PlayerControl(Stop)")
         jsStor.save(tempData)
         return elem
 
