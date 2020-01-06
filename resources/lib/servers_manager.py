@@ -74,6 +74,7 @@ def switchServer():
     i_curr = serversDialog(serverData,'Choose a default server')
     if i_curr == False:
         return
+    xbmc.executebuiltin("PlayerControl(Stop)")
     serverData["current_server"] = i_curr
     jsStorServer.save(serverData)
     #if we switch, reconnect
@@ -160,6 +161,7 @@ def modifyServer():
             value = gui.getFilterFromUser(key)
         if value <> False:
             serverData["servers"][i][key] = value
+    xbmc.executebuiltin("PlayerControl(Stop)")
     jsStorServer.save(serverData)
     #just to be sure, having potentially changed default server
     try:
