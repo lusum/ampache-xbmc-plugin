@@ -120,7 +120,7 @@ def addServer():
     serverData["servers"][stnum]["url"] = url
     serverData["servers"][stnum]["use_api_key"] = utils.int_to_strBool(is_api_key)
     serverData["servers"][stnum]["username"] = username
-    serverData["servers"][stnum]["enable_password"] = enablepassword
+    serverData["servers"][stnum]["enable_password"] = utils.int_to_strBool(enablepassword)
     serverData["servers"][stnum]["password"] = password
     serverData["servers"][stnum]["api_key"] = apikey
     jsStorServer.save(serverData)
