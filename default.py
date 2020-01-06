@@ -279,12 +279,17 @@ def get_time(time_offset):
 def get_items(object_type, object_id=None, add=None,
         thisFilter=None,limit=5000,useCacheArt=True, object_subtype=None, exact=None ):
     
-    if not object_type:
+    if object_type:
+        xbmc.log("AmpachePlugin::get_items: object_type " + object_type, xbmc.LOGDEBUG)
+    else:
+        #should be not possible
         xbmc.log("AmpachePlugin::get_items: object_type set to None" , xbmc.LOGDEBUG)
+        return
     
-    xbmc.log("AmpachePlugin::get_items: object_type " + object_type, xbmc.LOGDEBUG)
     if object_subtype:
         xbmc.log("AmpachePlugin::get_items: object_subtype " + object_subtype, xbmc.LOGDEBUG)
+    if object_id:
+        xbmc.log("AmpachePlugin::get_items: object_id " + str(object_id), xbmc.LOGDEBUG)
 
     jsStor = json_storage.JsonStorage("general.json")
     tempData = jsStor.getData()
@@ -361,6 +366,8 @@ def do_search(object_type,object_subtype=None,thisFilter=None):
         thisFilter = gui.getFilterFromUser()
     if thisFilter:
         get_items(object_type=object_type,thisFilter=thisFilter,object_subtype=object_subtype)
+        return True
+    return False
 
 def get_stats(object_type, object_subtype=None, limit=5000 ):       
     
@@ -560,10 +567,8 @@ if (__name__ == '__main__'):
         #artist, album, songs, playlist follow the same structure
         #search function
         num_items = (int(ampache.getSetting("random_items"))*3)+3
-        if object_id == 9999999:
-            do_search("artists")
         #recent function
-        elif object_id > 9999994 and object_id < 9999999:
+        if object_id > 9999994 and object_id < 9999999:
             get_recent( "artists", object_id )
         elif object_id == 9999994:
             #removed cause nasty recursive call using some commands in web interface
@@ -588,9 +593,7 @@ if (__name__ == '__main__'):
 
     elif mode==2:
         num_items = (int(ampache.getSetting("random_items"))*3)+3
-        if object_id == 9999999:
-            do_search("albums")
-        elif object_id > 9999994 and object_id < 9999999:
+        if object_id > 9999994 and object_id < 9999999:
             get_recent( "albums", object_id )
         elif object_id == 9999994:
             #removed cause nasty recursive call using some commands in web interface
@@ -616,9 +619,7 @@ if (__name__ == '__main__'):
             
     elif mode==3:
         num_items = (int(ampache.getSetting("random_items"))*3)+3
-        if object_id == 9999999:
-            do_search("songs")
-        elif object_id > 9999994 and object_id < 9999999:
+        if object_id > 9999994 and object_id < 9999999:
             get_recent( "songs", object_id )
         elif object_id == 9999994:
             #removed cause nasty recursive call using some commands in web interface
@@ -643,36 +644,29 @@ if (__name__ == '__main__'):
     elif mode==4:      
         dialog = xbmcgui.Dialog()
         ret = dialog.contextmenu(['Artist', 'Album', 'Song','Playlist','All','Tag'])
-        if ret == -1:
-            #no end directory item
-            mode = 100 
-        elif ret == 0:
-            do_search("artists")
+        endDir = False
+        if ret == 0:
+            endDir = do_search("artists")
         elif ret == 1:
-            do_search("albums")
+            endDir = do_search("albums")
         elif ret == 2:
-            do_search("songs")
+            endDir = do_search("songs")
         elif ret == 3:
-            do_search("playlists")
+            endDir = do_search("playlists")
         elif ret == 4:
-            do_search("songs","search_songs")
+            endDir = do_search("songs","search_songs")
         elif ret == 5:
             ret2 = dialog.contextmenu(['Artist tag', 'Album tag', 'Song tag'])        
-            if ret2 == -1:
-                #no end directory item
-                mode = 100 
-            elif ret2 == 0:
-                do_search("tags","tag_artists")
+            if ret2 == 0:
+                endDir = do_search("tags","tag_artists")
             elif ret2 == 1:
-                do_search("tags","tag_albums")
+                endDir = do_search("tags","tag_albums")
             elif ret2 == 2:
-                do_search("tags","tag_songs")
-        #addDir("Search Artists...",9999999,1,"DefaultFolder.png")
-        #addDir("Search Albums...",9999999,2,"DefaultFolder.png")
-        #addDir("Search Songs...",9999999,3,"DefaultFolder.png")
-        #addDir("Search Playlists...",9999999,13,"DefaultFolder.png")
-        #addDir("Search All...",9999999,11,"DefaultFolder.png")
-        #addDir("Search Tags...",9999999,18,"DefaultFolder.png")
+                endDir = endDir = do_search("tags","tag_songs")
+
+        if endDir == False:
+            #no end directory item
+            mode = 100 
 
     # recent additions screen ( called from main screen )
 
@@ -719,10 +713,6 @@ if (__name__ == '__main__'):
     elif mode==9:
         play_track(object_id)
 
-    # mode 11 : search all
-    elif mode==11:
-        do_search("songs","search_songs")
-
     # mode 12 : artist_songs
     elif mode==12:
         get_items(object_type="songs",object_id=object_id,object_subtype="artist_songs" )
@@ -730,9 +720,7 @@ if (__name__ == '__main__'):
     #   playlist full list ( called from main screen )
 
     elif mode==13:
-            if object_id == 9999999:
-                do_search("playlists")
-            elif object_id > 9999994 and object_id < 9999999:
+            if object_id > 9999994 and object_id < 9999999:
                 get_recent( "playlists", object_id )
             elif object_id == 9999994:
                 #removed cause nasty recursive call using some commands in web interface
@@ -761,7 +749,10 @@ if (__name__ == '__main__'):
     elif mode==17:
         if xbmc.getCondVisibility("Window.IsActive(musicplaylist)"):
             xbmc.executebuiltin("ActivateWindow(%s)" % (win_id,))
-        do_search("songs",thisFilter=title)
+        endDir = do_search("songs",thisFilter=title)
+        if endDir == False:
+            #no end directory item
+            mode = 100 
 
     elif mode==18:
         addDir("Artist tags...",object_id,19)
@@ -769,25 +760,19 @@ if (__name__ == '__main__'):
         addDir("Song tags...",object_id,21)
 
     elif mode==19:
-        if object_id == 9999999:
-            do_search("tags","tag_artists")
-        elif object_id:
+        if object_id:
             get_items(object_type="artists", object_subtype="tag_artists",object_id=object_id)
         else:
             get_items(object_type = "tags", object_subtype="tag_artists")
 
     elif mode==20:
-        if object_id == 9999999:
-            do_search("tags","tag_albums")
-        elif object_id:
+        if object_id:
             get_items(object_type="albums", object_subtype="tag_albums",object_id=object_id)
         else:
             get_items(object_type = "tags", object_subtype="tag_albums")
 
     elif mode==21:
-        if object_id == 9999999:
-            do_search("tags","tag_songs")
-        elif object_id:
+        if object_id:
             get_items(object_type="songs", object_subtype="tag_songs",object_id=object_id)
         else:
             get_items(object_type = "tags", object_subtype="tag_songs")
