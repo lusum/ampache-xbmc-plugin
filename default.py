@@ -662,7 +662,7 @@ if (__name__ == '__main__'):
             elif ret2 == 1:
                 endDir = do_search("tags","tag_albums")
             elif ret2 == 2:
-                endDir = endDir = do_search("tags","tag_songs")
+                endDir = do_search("tags","tag_songs")
 
         if endDir == False:
             #no end directory item
