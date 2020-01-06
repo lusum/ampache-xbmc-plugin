@@ -199,6 +199,7 @@ def addSongLinks(elem):
 def play_track(id):
     ''' Start to stream the track with the given id. '''
     ampConn = ampache_connect.AmpacheConnect()
+
     try:
         ampConn.filter = id 
         elem = ampConn.ampache_http_request("song")
@@ -639,13 +640,39 @@ if (__name__ == '__main__'):
 
     # search screen ( called from main screen )
 
-    elif mode==4:
-        addDir("Search Artists...",9999999,1,"DefaultFolder.png")
-        addDir("Search Albums...",9999999,2,"DefaultFolder.png")
-        addDir("Search Songs...",9999999,3,"DefaultFolder.png")
-        addDir("Search Playlists...",9999999,13,"DefaultFolder.png")
-        addDir("Search All...",9999999,11,"DefaultFolder.png")
-        addDir("Search Tags...",9999999,18,"DefaultFolder.png")
+    elif mode==4:      
+        dialog = xbmcgui.Dialog()
+        ret = dialog.contextmenu(['Artist', 'Album', 'Song','Playlist','All','Tag'])
+        if ret == -1:
+            #no end directory item
+            mode = 100 
+        elif ret == 0:
+            do_search("artists")
+        elif ret == 1:
+            do_search("albums")
+        elif ret == 2:
+            do_search("songs")
+        elif ret == 3:
+            do_search("playlists")
+        elif ret == 4:
+            do_search("songs","search_songs")
+        elif ret == 5:
+            ret2 = dialog.contextmenu(['Artist tag', 'Album tag', 'Song tag'])        
+            if ret2 == -1:
+                #no end directory item
+                mode = 100 
+            elif ret2 == 0:
+                do_search("tags","tag_artists")
+            elif ret2 == 1:
+                do_search("tags","tag_albums")
+            elif ret2 == 2:
+                do_search("tags","tag_songs")
+        #addDir("Search Artists...",9999999,1,"DefaultFolder.png")
+        #addDir("Search Albums...",9999999,2,"DefaultFolder.png")
+        #addDir("Search Songs...",9999999,3,"DefaultFolder.png")
+        #addDir("Search Playlists...",9999999,13,"DefaultFolder.png")
+        #addDir("Search All...",9999999,11,"DefaultFolder.png")
+        #addDir("Search Tags...",9999999,18,"DefaultFolder.png")
 
     # recent additions screen ( called from main screen )
 
