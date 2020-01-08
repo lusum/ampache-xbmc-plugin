@@ -48,16 +48,16 @@ class AmpacheConnect():
         return myURL
 
     def get_auth_key_login_url(self):
-        myURL = self._connectionData["server"] + '/server/xml.server.php?action=handshake&auth='
-        myURL += self._connectionData("api_key")
+        myURL = self._connectionData["url"] + '/server/xml.server.php?action=handshake&auth='
+        myURL += self._connectionData["api_key"]
         myURL += '&version=' + self._ampache.getSetting("api-version")
         return myURL
 
     def handle_request(self,url):
+        xbmc.log("AmpachePlugin::handle_request: url " + url, xbmc.LOGDEBUG)
+        ssl_certs_str = self._ampache.getSetting("disable_ssl_certs")
         try:
-            xbmc.log(url,xbmc.LOGNOTICE)
             req = urllib2.Request(url)
-            ssl_certs_str = self._ampache.getSetting("disable_ssl_certs")
             if utils.strBool_to_bool(ssl_certs_str):
                 gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
                 response = urllib2.urlopen(req, context=gcontext, timeout=400)
@@ -69,6 +69,8 @@ class AmpacheConnect():
             xbmc.log("AmpachePlugin::handle_request ConnectionError",xbmc.LOGDEBUG)
             xbmc.executebuiltin("ConnectionError" )
             raise self.ConnectionError
+        #headers = reponse.headers()
+        #contents = reponse.read()
         return response
 
     def AMPACHECONNECT(self):
@@ -97,42 +99,43 @@ class AmpacheConnect():
             xbmc.log("AmpachePlugin::AMPACHECONNECT ConnectionError",xbmc.LOGDEBUG)
             raise self.ConnectionError
         xbmc.log("AmpachePlugin::AMPACHECONNECT ConnectionOk",xbmc.LOGDEBUG)
-        tree=ET.parse(response)
+        contents = response.read()
+        tree=ET.XML(contents)
         response.close()
-        elem = tree.getroot()
-        xbmc.log("AmpachePlugin::AMPACHECONNECT contents " + ET.tostring(elem, encoding='utf8').decode('utf8'),xbmc.LOGDEBUG)
-        if tree.findtext("error"):
+        xbmc.log("AmpachePlugin::AMPACHECONNECT contents " + contents,xbmc.LOGDEBUG)
+        errormess = tree.findtext('error')
+        if errormess:
             errornode = tree.find("error")
             if errornode.attrib["code"]=="401":
-                errormess = elem.findtext('error')
                 if "time" in errormess:
                     xbmc.executebuiltin("Notification(Error,If you are using Nextcloud don't check api_key box)")
                 else:
                     xbmc.executebuiltin("Notification(Error,Connection error)")
             raise self.ConnectionError
             return
-        token = elem.findtext('auth')
-        version = elem.findtext('api')
+        token = tree.findtext('auth')
+        version = tree.findtext('api')
         if not version:
         #old api
-            version = elem.findtext('version')
+            version = tree.findtext('version')
         #setSettings only string or unicode
         tempData["api-version"] = version
-        tempData["artists"] = elem.findtext("artists")
-        tempData["albums"] = elem.findtext("albums")
-        tempData["songs"] = elem.findtext("songs")
-        tempData["playlists"] = elem.findtext("playlists")
-        tempData["add"] = elem.findtext("add")
+        tempData["artists"] = tree.findtext("artists")
+        tempData["albums"] = tree.findtext("albums")
+        tempData["songs"] = tree.findtext("songs")
+        tempData["playlists"] = tree.findtext("playlists")
+        tempData["add"] = tree.findtext("add")
         tempData["token"] = token
         tempData["token-exp"] = str(nTime+24000)
         jsStor.save(tempData)
-        return elem
+        return tree
 
     def ampache_http_request(self,action):
         thisURL = self.build_ampache_url(action)
         try:
             response = self.handle_request(thisURL)
         except self.ConnectionError:
+            response.close()
             raise self.ConnectionError
         contents = response.read()
         contents = contents.replace("\0", "")
