@@ -43,22 +43,20 @@ def cacheArt(url):
 		return pathJpg
 	else:
                 xbmc.log("AmpachePlugin::CacheArt: File needs fetching ",xbmc.LOGDEBUG)
-                opener = ampacheConnect.handle_request(url)
-		if opener.headers.maintype == 'image':
-			extension = opener.headers['content-type']
+                headers,contents = ampacheConnect.handle_request(url)
+		if headers.maintype == 'image':
+			extension = headers['content-type']
 			tmpExt = extension.split("/")
 			if tmpExt[1] == "jpeg":
 				fname = imageNameJpg
 			else:
 				fname = imageID.group(1) + '.' + tmpExt[1]
                         pathJpg = os.path.join( cacheDir , fname )
-			open( pathJpg, 'wb').write(opener.read())
+			open( pathJpg, 'wb').write(contents)
                         xbmc.log("AmpachePlugin::CacheArt: Cached " + str(fname), xbmc.LOGDEBUG )
-                        opener.close()
 			return pathJpg
 		else:
                         xbmc.log("AmpachePlugin::CacheArt: It didnt work", xbmc.LOGDEBUG )
-                        opener.close()
                         raise NameError
 			#return False
 

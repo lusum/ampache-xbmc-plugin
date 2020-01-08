@@ -69,9 +69,10 @@ class AmpacheConnect():
             xbmc.log("AmpachePlugin::handle_request ConnectionError",xbmc.LOGDEBUG)
             xbmc.executebuiltin("ConnectionError" )
             raise self.ConnectionError
-        #headers = reponse.headers()
-        #contents = reponse.read()
-        return response
+        headers = response.headers
+        contents = response.read()
+        response.close()
+        return headers,contents
 
     def AMPACHECONNECT(self):
         jsStor = json_storage.JsonStorage("general.json")
@@ -94,14 +95,12 @@ class AmpacheConnect():
             xbmc.log("AmpachePlugin::AMPACHECONNECT login password",xbmc.LOGDEBUG)
             myURL = self.get_user_pwd_login_url(nTime)
         try:
-            response = self.handle_request(myURL)
+            headers,contents = self.handle_request(myURL)
         except self.ConnectionError:
             xbmc.log("AmpachePlugin::AMPACHECONNECT ConnectionError",xbmc.LOGDEBUG)
             raise self.ConnectionError
         xbmc.log("AmpachePlugin::AMPACHECONNECT ConnectionOk",xbmc.LOGDEBUG)
-        contents = response.read()
         tree=ET.XML(contents)
-        response.close()
         xbmc.log("AmpachePlugin::AMPACHECONNECT contents " + contents,xbmc.LOGDEBUG)
         errormess = tree.findtext('error')
         if errormess:
@@ -133,20 +132,15 @@ class AmpacheConnect():
     def ampache_http_request(self,action):
         thisURL = self.build_ampache_url(action)
         try:
-            response = self.handle_request(thisURL)
+            headers,contents  = self.handle_request(thisURL)
         except self.ConnectionError:
-            response.close()
             raise self.ConnectionError
-        contents = response.read()
         contents = contents.replace("\0", "")
-        #remove bug & it is not allowed as text in tags
-        
         #code useful for debugging/parser needed
         xbmc.log("AmpachePlugin::ampache_http_request: contents " + contents, xbmc.LOGDEBUG)
         #parser = ET.XMLParser(recover=True)
         #tree=ET.XML(contents, parser = parser)
         tree=ET.XML(contents)
-        response.close()
         if tree.findtext("error"):
             errornode = tree.find("error")
             if errornode.attrib["code"]=="401":
@@ -156,12 +150,10 @@ class AmpacheConnect():
                     raise self.ConnectionError
                 thisURL = self.build_ampache_url(action)
                 try:
-                    response = self.handle_request(thisURL)
+                    headers,contents = self.handle_request(thisURL)
                 except self.ConnectionError:
                     raise self.ConnectionError
-                contents = response.read()
                 tree=ET.XML(contents)
-                response.close()
         return tree
     
     def build_ampache_url(self,action):
