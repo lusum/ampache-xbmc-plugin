@@ -38,13 +38,13 @@ def cacheArt(url):
         pathPng = os.path.join( cacheDir , imageNamePng )
         pathJpg = os.path.join( cacheDir , imageNameJpg )
 	if os.path.exists( pathPng ):
-                xbmc.log("AmpachePlugin::CacheArt: png cached",xbmc.LOGDEBUG)
+                #xbmc.log("AmpachePlugin::CacheArt: png cached",xbmc.LOGDEBUG)
 		return pathPng
         elif os.path.exists( pathJpg ):
-                xbmc.log("AmpachePlugin::CacheArt: jpg cached",xbmc.LOGDEBUG)
+                #xbmc.log("AmpachePlugin::CacheArt: jpg cached",xbmc.LOGDEBUG)
 		return pathJpg
 	else:
-                xbmc.log("AmpachePlugin::CacheArt: File needs fetching ",xbmc.LOGDEBUG)
+                #xbmc.log("AmpachePlugin::CacheArt: File needs fetching ",xbmc.LOGDEBUG)
                 headers,contents = ampacheConnect.handle_request(url)
 		if headers.maintype == 'image':
 			extension = headers['content-type']
@@ -55,7 +55,7 @@ def cacheArt(url):
 				fname = imageID.group(1) + '.' + tmpExt[1]
                         pathJpg = os.path.join( cacheDir , fname )
 			open( pathJpg, 'wb').write(contents)
-                        xbmc.log("AmpachePlugin::CacheArt: Cached " + str(fname), xbmc.LOGDEBUG )
+                        #xbmc.log("AmpachePlugin::CacheArt: Cached " + str(fname), xbmc.LOGDEBUG )
 			return pathJpg
 		else:
                         xbmc.log("AmpachePlugin::CacheArt: It didnt work", xbmc.LOGDEBUG )
@@ -83,7 +83,7 @@ def get_art(node):
         albumArt = cacheArt(node.findtext("art"))
     except NameError:
         albumArt = "DefaultFolder.png"
-    xbmc.log("AmpachePlugin::get_art: albumArt - " + str(albumArt), xbmc.LOGDEBUG )
+    #xbmc.log("AmpachePlugin::get_art: albumArt - " + str(albumArt), xbmc.LOGDEBUG )
     return albumArt
 
 def get_infolabels(object_type , node):
@@ -180,8 +180,6 @@ def addSongLinks(elem):
         if cm != []:
             liz.addContextMenuItems(cm)
 
-        #song_elem = node.find("song")
-        #song_id = int(node.attrib["id"])
         song_url = node.findtext("url")
         track_parameters = { "mode": 9, "song_url" : song_url}
         url = sys.argv[0] + '?' + urllib.urlencode(track_parameters)
@@ -192,24 +190,9 @@ def addSongLinks(elem):
     xbmc.log("AmpachePlugin::addSongLinks " + str(ok), xbmc.LOGDEBUG)
     return ok
 
-# The function that actually plays an Ampache URL by using setResolvedUrl. Gotta have the extra step in order to make
-# song album art / play next automatically. We already have the track URL when we add the directory item so the api
-# hit here is really unnecessary. Would be nice to get rid of it, the extra request adds to song gaps. It does
-# guarantee that we are using a legit URL, though, if the session expired between the item being added and the actual
-# playing of that item.
+# The function that actually plays an Ampache URL by using setResolvedUrl. 
 def play_track(song_url):
-    #''' Start to stream the track with the given id. '''
-    #ampConn = ampache_connect.AmpacheConnect()
-
-    #try:
-    #    ampConn.filter = id 
-    #    elem = ampConn.ampache_http_request("song")
-    #except:
-    #    return
-    #for thisnode in elem:
-    #    node = thisnode
     liz = xbmcgui.ListItem()
-    #fillListItemWithSongInfo(liz,node)
     liz.setPath(song_url)
     xbmcplugin.setResolvedUrl(handle=int(sys.argv[1]), succeeded=True,listitem=liz)
 
@@ -487,9 +470,7 @@ def get_random(object_type):
             addItem( object_type, mode , el)
         
 def get_params():
-    xbmc.log("AmpachePlugin::get_params 0 " + sys.argv[0], xbmc.LOGDEBUG)
-    xbmc.log("AmpachePlugin::get_params 1 " + sys.argv[1], xbmc.LOGDEBUG)
-    xbmc.log("AmpachePlugin::get_params 2 " + sys.argv[2], xbmc.LOGDEBUG)
+    xbmc.log("AmpachePlugin::get_params handle " + sys.argv[0] + " first " + sys.argv[1] + " second " + sys.argv[2], xbmc.LOGDEBUG)
     param=[]
     paramstring=sys.argv[2]
     if len(paramstring)>=2:
