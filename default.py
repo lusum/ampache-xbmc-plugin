@@ -178,9 +178,10 @@ def addSongLinks(elem):
         if cm != []:
             liz.addContextMenuItems(cm)
 
-        song_elem = node.find("song")
-        song_id = int(node.attrib["id"])
-        track_parameters = { "mode": 9, "object_id": song_id}
+        #song_elem = node.find("song")
+        #song_id = int(node.attrib["id"])
+        song_url = node.findtext("url")
+        track_parameters = { "mode": 9, "song_url" : song_url}
         url = sys.argv[0] + '?' + urllib.urlencode(track_parameters)
         tu= (url,liz)
         it.append(tu)
@@ -194,19 +195,20 @@ def addSongLinks(elem):
 # hit here is really unnecessary. Would be nice to get rid of it, the extra request adds to song gaps. It does
 # guarantee that we are using a legit URL, though, if the session expired between the item being added and the actual
 # playing of that item.
-def play_track(id):
-    ''' Start to stream the track with the given id. '''
-    ampConn = ampache_connect.AmpacheConnect()
+def play_track(song_url):
+    #''' Start to stream the track with the given id. '''
+    #ampConn = ampache_connect.AmpacheConnect()
 
-    try:
-        ampConn.filter = id 
-        elem = ampConn.ampache_http_request("song")
-    except:
-        return
-    for thisnode in elem:
-        node = thisnode
+    #try:
+    #    ampConn.filter = id 
+    #    elem = ampConn.ampache_http_request("song")
+    #except:
+    #    return
+    #for thisnode in elem:
+    #    node = thisnode
     liz = xbmcgui.ListItem()
-    fillListItemWithSongInfo(liz,node)
+    #fillListItemWithSongInfo(liz,node)
+    liz.setPath(song_url)
     xbmcplugin.setResolvedUrl(handle=int(sys.argv[1]), succeeded=True,listitem=liz)
 
 # Main function for adding xbmc plugin elements
@@ -510,6 +512,7 @@ if (__name__ == '__main__'):
     object_id=None
     win_id=None
     title=None
+    song_url=None
     
     try:
             name=urllib.unquote_plus(params["name"])
@@ -534,6 +537,11 @@ if (__name__ == '__main__'):
     try:
             title=urllib.unquote_plus(params["title"])
             xbmc.log("AmpachePlugin::title " + title, xbmc.LOGDEBUG)
+    except:
+            pass
+    try:
+            song_url=urllib.unquote_plus(params["song_url"])
+            xbmc.log("AmpachePlugin::song_url " + song_url, xbmc.LOGDEBUG)
     except:
             pass
 
@@ -709,7 +717,7 @@ if (__name__ == '__main__'):
     #   play track mode  ( mode set in add_links function )
 
     elif mode==9:
-        play_track(object_id)
+        play_track(song_url)
 
     # mode 12 : artist_songs
     elif mode==12:
