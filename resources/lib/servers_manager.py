@@ -151,12 +151,10 @@ def modifyServer():
             dialog = xbmcgui.Dialog()
             value_int = dialog.yesno('Use api Key?','Do you want to use an api-key?')
             value = utils.int_to_strBool(value_int)
-            print value
         elif key == "enable_password":
             dialog = xbmcgui.Dialog()
             value_int = dialog.yesno('Use password?','The server needs a password?')
             value = utils.int_to_strBool(value_int)
-            print value
         else:
             value = gui.getFilterFromUser(key)
         if value <> False:
