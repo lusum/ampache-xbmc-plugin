@@ -19,7 +19,9 @@ ampache_addon_path =  ampache.getAddonInfo('path').decode('utf-8')
 ampache_dir = xbmc.translatePath( ampache_addon_path )
 BASE_RESOURCE_PATH = os.path.join( ampache_dir, 'resources' )
 mediaDir = os.path.join( BASE_RESOURCE_PATH , 'media' )
-cacheDir = os.path.join( mediaDir , 'cache' )
+user_dir = xbmc.translatePath( ampache.getAddonInfo('profile')).decode('utf-8')
+user_mediaDir = os.path.join( user_dir , 'media' )
+cacheDir = os.path.join( user_mediaDir , 'cache' )
 imagepath = os.path.join( mediaDir ,'images')
 
 def cacheArt(url):
