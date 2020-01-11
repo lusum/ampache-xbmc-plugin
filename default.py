@@ -10,6 +10,7 @@ from resources.lib import ampache_connect
 from resources.lib import json_storage
 from resources.lib import servers_manager
 from resources.lib import gui
+from resources.lib import utils
 
 # Shared resources
 
@@ -192,6 +193,16 @@ def addSongLinks(elem):
 
 # The function that actually plays an Ampache URL by using setResolvedUrl. 
 def play_track(song_url):
+    #check if the connection is expired, initialise the connect class only if
+    #refresh is needed to speed up the play 
+    if utils.check_tokenexp():
+        ampConn = ampache_connect.AmpacheConnect()
+        xbmc.log("refreshing token...", xbmc.LOGNOTICE )
+        try:
+            #elem non used
+            elem = ampConn.AMPACHECONNECT()
+        except:
+            return
     liz = xbmcgui.ListItem()
     liz.setPath(song_url)
     xbmcplugin.setResolvedUrl(handle=int(sys.argv[1]), succeeded=True,listitem=liz)
@@ -276,11 +287,8 @@ def get_items(object_type, object_id=None, add=None,
     if object_id:
         xbmc.log("AmpachePlugin::get_items: object_id " + str(object_id), xbmc.LOGDEBUG)
 
-    jsStor = json_storage.JsonStorage("general.json")
-    tempData = jsStor.getData()
-
     if limit == None:
-        limit = int(tempData[object_type])
+        limit = int(ampache.getSetting(object_type))
     mode = None
 
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
@@ -357,8 +365,6 @@ def do_search(object_type,object_subtype=None,thisFilter=None):
 def get_stats(object_type, object_subtype=None, limit=5000 ):       
     
     ampConn = ampache_connect.AmpacheConnect()
-    jsStor = json_storage.JsonStorage("general.json")
-    tempData = jsStor.getData()
     
     xbmc.log("AmpachePlugin::get_stats ",  xbmc.LOGDEBUG)
     mode = None
@@ -370,7 +376,7 @@ def get_stats(object_type, object_subtype=None, limit=5000 ):
     xbmcplugin.setContent(int(sys.argv[1]), object_type)
 
     action = 'stats'
-    if(tempData["api-version"]) < 400001:
+    if(ampache.getSetting("api-version")) < 400001:
         amtype = object_subtype
         thisFilter = None
     else:
@@ -394,11 +400,9 @@ def get_stats(object_type, object_subtype=None, limit=5000 ):
     addItem( object_type, mode , elem)
 
 def get_recent(object_type,object_id,object_subtype=None):   
-    jsStor = json_storage.JsonStorage("general.json")
-    tempData = jsStor.getData()
 
     if object_id == 9999998:
-        update = tempData["add"]        
+        update = ampache.getSetting("add")
         xbmc.log(update[:10],xbmc.LOGNOTICE)
         get_items(object_type=object_type,add=update[:10],object_subtype=object_subtype)
     elif object_id == 9999997:
@@ -414,8 +418,6 @@ def get_random(object_type):
     #object type can be : albums, artists, songs, playlists
     
     ampConn = ampache_connect.AmpacheConnect()
-    jsStor = json_storage.JsonStorage("general.json")
-    tempData = jsStor.getData()
     
     if object_type == 'albums':
         amtype='album'
@@ -433,14 +435,14 @@ def get_random(object_type):
         
     random_items = (int(ampache.getSetting("random_items"))*3)+3
     xbmc.log("AmpachePlugin::get_random: random_items " + str(random_items), xbmc.LOGDEBUG )
-    items = int(tempData[object_type])
+    items = int(ampache.getSetting(object_type))
     xbmc.log("AmpachePlugin::get_random: total items in the catalog " + str(items), xbmc.LOGDEBUG )
     if random_items > items:
         #if items are less than random_itmes, return all items
         get_items(object_type, limit=items)
         return
     #playlists are not in the new stats api, so, use the old mode
-    if(int(tempData["api-version"])) >= 400001 and object_type != 'playlists':
+    if(int(ampache.getSetting("api-version"))) >= 400001 and object_type != 'playlists':
         action = 'stats'
         thisFilter = 'random'
         try:
@@ -528,10 +530,6 @@ if (__name__ == '__main__'):
     except:
             pass
 
-
-    jsStor = json_storage.JsonStorage("general.json")
-    tempData = jsStor.getData()
-    
     servers_manager.initialiseServer()
     
     ampacheConnect = ampache_connect.AmpacheConnect()
@@ -769,7 +767,7 @@ if (__name__ == '__main__'):
     elif mode==23:
         addDir("Recent...",None,5,"DefaultFolder.png")
         addDir("Random...",None,7,"DefaultFolder.png")
-        if(int(tempData["api-version"])) >= 400001:
+        if(int(ampache.getSetting("api-version"))) >= 400001:
             addDir("Hightest Rated...",9999993,30)
             addDir("Frequent...",9999992,31)
             addDir("Flagged...",9999991,32)
@@ -777,15 +775,15 @@ if (__name__ == '__main__'):
             addDir("Newest...",9999989,34)
 
     elif mode==24:
-        addDir("Artists (" + tempData["artists"]+ ")",None,1,"DefaultFolder.png")
-        addDir("Albums (" + tempData["albums"] + ")",None,2,"DefaultFolder.png")
-        addDir("Playlists (" + tempData["playlists"] + ")",None,13,"DefaultFolder.png")
+        addDir("Artists (" + ampache.getSetting("artists")+ ")",None,1,"DefaultFolder.png")
+        addDir("Albums (" + ampache.getSetting("albums") + ")",None,2,"DefaultFolder.png")
+        addDir("Playlists (" + ampache.getSetting("playlists")+ ")",None,13,"DefaultFolder.png")
         addDir("Tags",None,18,"DefaultFolder.png")
     
     elif mode==25:
         addDir("Recent Albums...",9999997,6,"DefaultFolder.png")
         addDir("Random Albums...",9999994,2,"DefaultFolder.png")
-        if(int(tempData["api-version"])) >= 400001:
+        if(int(ampache.getSetting("api-version"))) >= 400001:
             addDir("Newest Albums...",9999989,2)
             addDir("Frequent Albums...",9999992,2)
         addDir("Server playlist...",9999994,3,"DefaultFolder.png")

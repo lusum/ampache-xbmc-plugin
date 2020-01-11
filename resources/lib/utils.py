@@ -1,3 +1,7 @@
+import time
+import xbmcaddon
+
+ampache = xbmcaddon.Addon("plugin.audio.ampache")
 
 def int_to_strBool(s):
     if s == 1:
@@ -17,3 +21,8 @@ def strBool_to_bool(s):
     else:
         raise ValueError
 
+def check_tokenexp():
+    tokenexp = int(ampache.getSetting("token-exp"))
+    if int(time.time()) > tokenexp:
+        return True
+    return False

@@ -75,16 +75,7 @@ class AmpacheConnect():
         return headers,contents
 
     def AMPACHECONNECT(self):
-        jsStor = json_storage.JsonStorage("general.json")
-        tempData = {}
-        tempData["api-version"] = 350001
-        tempData["artists"] = ""
-        tempData["albums"] = ""
-        tempData["songs"] = ""
-        tempData["playlists"] = ""
-        tempData["add"] = ""
-        tempData["token"] = ""
-        tempData["token-exp"] = ""
+        version = 350001
         socket.setdefaulttimeout(3600)
         nTime = int(time.time())
         use_api_key = self._connectionData["use_api_key"]
@@ -118,15 +109,14 @@ class AmpacheConnect():
         #old api
             version = tree.findtext('version')
         #setSettings only string or unicode
-        tempData["api-version"] = version
-        tempData["artists"] = tree.findtext("artists")
-        tempData["albums"] = tree.findtext("albums")
-        tempData["songs"] = tree.findtext("songs")
-        tempData["playlists"] = tree.findtext("playlists")
-        tempData["add"] = tree.findtext("add")
-        tempData["token"] = token
-        tempData["token-exp"] = str(nTime+24000)
-        jsStor.save(tempData)
+        self._ampache.setSetting("api-version",version)
+        self._ampache.setSetting("artists", tree.findtext("artists"))
+        self._ampache.setSetting("albums", tree.findtext("albums"))
+        self._ampache.setSetting("songs", tree.findtext("songs"))
+        self._ampache.setSetting("playlists", tree.findtext("playlists"))
+        self._ampache.setSetting("add", tree.findtext("add"))
+        self._ampache.setSetting("token", token)
+        self._ampache.setSetting("token-exp", str(nTime+24000))
         return tree
 
     def ampache_http_request(self,action):
@@ -157,17 +147,14 @@ class AmpacheConnect():
         return tree
     
     def build_ampache_url(self,action):
-        jsStor = json_storage.JsonStorage("general.json")
-        tempData = jsStor.getData()
-        tokenexp = int(tempData["token-exp"])
-        if int(time.time()) > tokenexp:
+        if utils.check_tokenexp():
             xbmc.log("refreshing token...", xbmc.LOGNOTICE )
             try:
+                #elem non used
                 elem = self.AMPACHECONNECT()
             except:
                 return
-
-        token=tempData["token"]
+        token = self._ampache.getSetting("token")
         thisURL = self._connectionData["url"] + '/server/xml.server.php?action=' + action 
         thisURL += '&auth=' + token
         thisURL += '&limit=' +str(self.limit)
